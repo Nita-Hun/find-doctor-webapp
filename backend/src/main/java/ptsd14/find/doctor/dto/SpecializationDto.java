@@ -1,5 +1,7 @@
 package ptsd14.find.doctor.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 
@@ -7,6 +9,8 @@ import lombok.Data;
 public class SpecializationDto {
     private Long id;
     private String name;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // // Static factory method for easy conversion
     // public static SpecializationDto fromEntity(Specialization specialization) {

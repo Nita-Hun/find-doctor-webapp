@@ -1,9 +1,11 @@
 'use client';
-
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import DoctorFormModal from '@/components/DoctorFormModal';
+import Pagination from '@/components/Pagination';
+import LoadingState from '@/components/LoadingState';
+import ErrorState from '@/components/ErrorState';
 
 interface Doctor {
   id: number;
@@ -14,11 +16,11 @@ interface Doctor {
   hospitalName?: string;
   specializationId: number;
   specializationName?: string;
-  email?: string;
-  phone?: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
 export default function DoctorPage() {
+  const [types] = useState<Doctor[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -40,7 +42,7 @@ export default function DoctorPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get('http://localhost:8080/api/doctors');
+      const response = await apiClient.get('/api/doctors');
       console.log('API Response:', response.data); // Debug log
       
       // Handle different response formats
@@ -71,7 +73,7 @@ export default function DoctorPage() {
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this doctor?')) {
       try {
-        await axios.delete(`http://localhost:8080/api/doctors/${id}`);
+        await apiClient.delete(`/api/doctors/${id}`);
         toast.success('Doctor deleted successfully');
         setRefreshKey(prev => prev + 1); // Trigger refresh
       } catch (error) {
@@ -85,6 +87,14 @@ export default function DoctorPage() {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
+  const filteredTypes = types.filter(type => 
+    type.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    type.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    type.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    type.hospitalId.toString().includes(searchTerm) ||
+    type.specializationId.toString().includes(searchTerm)
+    
+  );
 
   // Filter doctors based on search term
   const filteredDoctors = doctors.filter(doctor => {
@@ -107,7 +117,19 @@ export default function DoctorPage() {
     setSelectedDoctor(null);
     setCurrentPage(1); // Reset to first page
   };
-
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if(isNaN(date.getTime())) return 'N/A';
+    
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header and Add Doctor button */}
@@ -153,28 +175,13 @@ export default function DoctorPage() {
       )}
 
       {/* Error state */}
-      {error && !isLoading && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="text-red-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setRefreshKey(prev => prev + 1)}
-              className="text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingState />}
+            {error && !isLoading && (
+              <ErrorState 
+                error={error} 
+                onRetry={() => setRefreshKey(prev => prev + 1)} 
+              />
+            )}
 
       {/* Empty state */}
       {!isLoading && !error && filteredDoctors.length === 0 && (
@@ -226,7 +233,7 @@ export default function DoctorPage() {
                     Status
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
+                    Last Updated
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -264,10 +271,10 @@ export default function DoctorPage() {
                         {doctor.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{doctor.email}</div>
-                      <div className="text-sm text-gray-500">{doctor.phone}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(doctor.updatedAt)}
                     </td>
+                    
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => {
@@ -292,65 +299,13 @@ export default function DoctorPage() {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-                    <span className="font-medium">
-                      {Math.min(currentPage * pageSize, filteredDoctors.length)}
-                    </span>{' '}
-                    of <span className="font-medium">{filteredDoctors.length}</span> results
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="sr-only">Previous</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const page = currentPage <= 3
-                        ? i + 1
-                        : currentPage >= totalPages - 2
-                        ? totalPages - 4 + i
-                        : currentPage - 2 + i;
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="sr-only">Next</span>
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+          <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredDoctors.length}
+              pageSize={pageSize}
+            />
         </div>
       )}
 
@@ -364,4 +319,4 @@ export default function DoctorPage() {
       )}
     </div>
   );
-}
+} 

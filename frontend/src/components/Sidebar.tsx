@@ -9,52 +9,52 @@ import {
   BriefcaseIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
-  PowerIcon
+  PowerIcon,
 } from '@heroicons/react/24/outline';
 
 const menuItems = [
+  { label: 'Dashboards', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/dashboards' },
   { label: 'Doctors', icon: <UserCircleIcon className="h-5 w-5" />, href: '/admin/doctors' },
   { label: 'Patients', icon: <UsersIcon className="h-5 w-5" />, href: '/admin/patients' },
   { label: 'Appointments', icon: <CalendarDaysIcon className="h-5 w-5" />, href: '/admin/appointments' },
   { label: 'Specializations', icon: <BriefcaseIcon className="h-5 w-5" />, href: '/admin/specializations' },
   { label: 'Hospitals', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/hospitals' },
-  { label: 'Feedbacks', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/feedback' },
-  { label: 'AppointmentTypes', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/appointmenttype' },
+  { label: 'Feedbacks', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/feedbacks' },
+  { label: 'Appointment Types', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/appointmentTypes' },
+  { label: 'Payments', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/payments' },
   { label: 'Settings', icon: <Cog6ToothIcon className="h-5 w-5" />, href: '/admin/settings' },
-
-
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="p-4 space-y-4">
-      {menuItems.map((item) => (
-        <Link key={item.label} href={item.href} passHref>
-          <div
-            className={`flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-gray-100 text-sm ${
-              pathname.startsWith(item.href) ? 'bg-gray-200 font-semibold' : ''
-            }`}
-          >
-            {item.icon}
-            <span className="hidden lg:inline">{item.label}</span>
-          </div>
-        </Link>
-      ))}
-      <hr />
-      <Link href="/admin/settings">
-        <div className="flex items-center gap-3 p-2 text-sm hover:bg-gray-100 rounded-md">
-          <Cog6ToothIcon className="h-5 w-5" />
-          <span className="hidden lg:inline">Settings</span>
-        </div>
-      </Link>
+    <nav className="p-4 space-y-2 overflow-y-auto">
+      {menuItems.map((item) => {
+        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+        return (
+          <Link key={item.label} href={item.href} passHref>
+            <div
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex items-center gap-3 p-2 rounded-md cursor-pointer text-sm
+                ${isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}
+              `}
+            >
+              {item.icon}
+              <span className="hidden lg:inline">{item.label}</span>
+            </div>
+          </Link>
+        );
+      })}
+
+      <hr className="my-2" />
+
       <Link href="/logout">
         <div className="flex items-center gap-3 p-2 text-sm hover:bg-gray-100 rounded-md text-red-500">
           <PowerIcon className="h-5 w-5" />
           <span className="hidden lg:inline">Logout</span>
         </div>
       </Link>
-    </div>
+    </nav>
   );
 }

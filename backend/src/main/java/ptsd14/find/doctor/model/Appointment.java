@@ -59,6 +59,11 @@ public class Appointment {
     @JsonIgnore
     private List<Payment> payments;
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Feedback> feedbacks;
+
+
     // Pre-persist method to set createdAt (if not using default)
     @PrePersist
     protected void onCreate() {

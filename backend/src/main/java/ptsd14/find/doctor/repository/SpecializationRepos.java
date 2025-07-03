@@ -7,5 +7,9 @@ import ptsd14.find.doctor.model.Specialization;
 
 @Repository
 public interface SpecializationRepos extends JpaRepository<Specialization, Long>{
+
+    boolean existsByName(String name);
+
+    boolean existsByNameAndIdNot(String name, Long excludeId);
     
 }

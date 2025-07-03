@@ -1,61 +1,91 @@
 package ptsd14.find.doctor.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+import ptsd14.find.doctor.dto.AppointmentTypeDto;
+import ptsd14.find.doctor.exception.DuplicateResourceException;
+import ptsd14.find.doctor.exception.ResourceNotFoundException;
+import ptsd14.find.doctor.mapper.AppointmentTypeMapper;
 import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.repository.AppointmentTypeRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentTypeService {
 
-     private final AppointmentTypeRepository typeRepos;
+    private final AppointmentTypeRepository appointmentTypeRepository;
+    private final AppointmentTypeMapper appointmentTypeMapper;
 
-    // Get all (non-paginated, rarely used in production)
-    public List<AppointmentType> getAll() {
-        return typeRepos.findAll();
+    public Optional<AppointmentTypeDto> getById(Long id) {
+        return appointmentTypeRepository.findById(id)
+                .map(appointmentTypeMapper::toDto);
     }
 
-    // Get all with pagination and sorting by updatedAt DESC
-    public Page<AppointmentType> getAll(Pageable pageable) {
-        Pageable sortedPageable = PageRequest.of(
-            pageable.getPageNumber(), 
-            pageable.getPageSize(), 
-            Sort.by(Sort.Direction.DESC, "updatedAt")
-        );
-        return typeRepos.findAll(sortedPageable);
+    public List<AppointmentTypeDto> findAll() {
+        return appointmentTypeRepository.findAll().stream()
+                .map(appointmentTypeMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<AppointmentType> getById(Long id) {
-        return typeRepos.findById(id);
+    public AppointmentTypeDto create(AppointmentTypeDto dto) {
+        validateNameUniqueness(dto.getName(), null);
+        
+        AppointmentType appointmentType = appointmentTypeMapper.toEntity(dto);
+        appointmentType.setId(null); // Ensure new entity
+        AppointmentType saved = appointmentTypeRepository.save(appointmentType);
+        return appointmentTypeMapper.toDto(saved);
     }
 
-    public AppointmentType create(AppointmentType type) {
-        return typeRepos.save(type);
-    }
-    public AppointmentType update(Long id, AppointmentType data) {
-        return typeRepos.findById(id)
-            .map(existing -> {
-                existing.setName(data.getName());
-                existing.setPrice(data.getPrice());
-                return typeRepos.save(existing);
-            })
-            .orElseThrow(() -> new RuntimeException("Type not found with ID: " + id));
+    public AppointmentTypeDto update(Long id, AppointmentTypeDto dto) {
+        AppointmentType existing = appointmentTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("AppointmentType not found"));
+
+        // Only validate if name is being changed
+        if (dto.getName() != null && !dto.getName().equals(existing.getName())) {
+            validateNameUniqueness(dto.getName(), id);
+            existing.setName(dto.getName());
+        }
+
+        if (dto.getPrice() != null) {
+            existing.setPrice(dto.getPrice());
+        }
+
+        AppointmentType updated = appointmentTypeRepository.save(existing);
+        return appointmentTypeMapper.toDto(updated);
     }
 
     public void delete(Long id) {
-        typeRepos.deleteById(id);
+        if (!appointmentTypeRepository.existsById(id)) {
+            throw new ResourceNotFoundException("AppointmentType not found");
+        }
+        appointmentTypeRepository.deleteById(id);
     }
 
-    public Optional<AppointmentType> findById(Long id) {
-        return typeRepos.findById(id);
+    public boolean isNameUnique(String name, Long excludeId) {
+        if (excludeId == null) {
+            return !appointmentTypeRepository.existsByName(name);
+        }
+        return !appointmentTypeRepository.existsByNameAndIdNot(name, excludeId);
     }
-    
+
+    private void validateNameUniqueness(String name, Long excludeId) {
+        if (!isNameUnique(name, excludeId)) {
+            throw new DuplicateResourceException(
+                String.format("Appointment type with name '%s' already exists", name)
+            );
+        }
+    }
+
+    // Additional repository query methods
+    public boolean existsByName(String name) {
+        return appointmentTypeRepository.existsByName(name);
+    }
+
+    public boolean existsByNameAndIdNot(String name, Long id) {
+        return appointmentTypeRepository.existsByNameAndIdNot(name, id);
+    }
 }

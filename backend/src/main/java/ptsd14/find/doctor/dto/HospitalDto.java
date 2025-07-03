@@ -1,5 +1,7 @@
 package ptsd14.find.doctor.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,14 +14,7 @@ public class HospitalDto {
     private String name;
     private String address;
     private String phone;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
-    // Optional: Add fromEntity method if you want manual mapping alternative
-    // public static HospitalDto fromEntity(Hospital hospital) {
-    //     HospitalDto dto = new HospitalDto();
-    //     dto.setId(hospital.getId());
-    //     dto.setName(hospital.getName());
-    //     dto.setAddress(hospital.getAddress());
-    //     dto.setPhone(hospital.getPhone());
-    //     return dto;
-    // }
 }

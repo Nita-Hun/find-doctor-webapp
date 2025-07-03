@@ -7,5 +7,9 @@ import ptsd14.find.doctor.model.AppointmentType;
 
 @Repository
 public interface AppointmentTypeRepository extends JpaRepository<AppointmentType, Long>{
+
+    boolean existsByName(String name);
+
+    boolean existsByNameAndIdNot(String name, Long excludeId);
     
 }

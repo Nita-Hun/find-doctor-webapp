@@ -2,7 +2,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
-import Topbar from '@/components/Topbar';
+import Topbar from '@components/Topbar';
 import Image from 'next/image';
 import Link from 'next/link';
 

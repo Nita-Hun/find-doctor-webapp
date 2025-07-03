@@ -1,80 +1,112 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
-  const [message, setMessage] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const validate = () => {
+    const errors: { email?: string; password?: string } = {};
+    if (!form.email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Invalid email format';
+    }
+    if (!form.password) {
+      errors.password = 'Password is required';
+    } else if (form.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
+    if (!validate()) return;
+
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/login', form);
-      setMessage('Welcome ' + res.data.user.name + '!');
-      router.push('/dashboard');
+      const response = await apiClient.post('/api/auth/login', form);
+      const { accessToken, dashboardUrl } = response.data;
+      localStorage.setItem('token', accessToken);
+      router.push('/admin/dashboards');
     } catch (err: any) {
-      setMessage(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Login failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-md rounded-md w-full max-w-md p-8 text-center">
-        <div className="flex justify-center mb-4">
-          <img src="/lock-icon.png" alt="Lock Icon" className="h-12 w-12" />
-        </div>
-        <h1 className="text-2xl font-semibold mb-6">Login</h1>
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 text-left">
-          <div>
-            <label className="block text-sm text-gray-600">Email Address</label>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-indigo-200 p-4">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-semibold mb-6 text-center text-gray-700">Login to Your Account</h1>
+        <form onSubmit={handleLogin} noValidate>
+          <label className="block mb-2 text-gray-600">Email</label>
+          <input
+            type="email"
+            name="email"
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+              formErrors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+
+          <label className="block mt-4 mb-2 text-gray-600">Password</label>
+          <div className="relative">
             <input
-              name="email"
-              type="email"
-              onChange={handleChange}
-              className="w-full border-b-2 focus:outline-none py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600">Password</label>
-            <input
+              type={showPassword ? 'text' : 'password'}
               name="password"
-              type="password"
+              className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
+                formErrors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Enter your password"
+              value={form.password}
               onChange={handleChange}
-              className="w-full border-b-2 focus:outline-none py-2"
+              required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-indigo-500 hover:text-indigo-700 focus:outline-none"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
           </div>
-          <div className="flex items-center justify-between text-sm mt-1">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              Remember me
-            </label>
-            <a href="/forgot-password" className="text-blue-600 hover:underline">
-              Forget Password?
-            </a>
-          </div>
-          <button type="submit" className="bg-blue-600 text-white py-2 mt-2 rounded hover:bg-blue-700 transition">
-            LOGIN
+          {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
+
+          {error && <p className="text-red-600 text-center mt-4">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full mt-6 bg-indigo-600 text-white py-3 rounded-md hover:bg-indigo-700 transition-colors"
+          >
+            Login
           </button>
         </form>
-        {message && <p className="mt-4 text-sm text-red-500">{message}</p>}
-        <p className="mt-6 text-sm text-center">
-          Don’t have an account?{' '}
-          <a href="/register" className="text-blue-600 hover:underline">
-            Register
-          </a>
+
+        <p className="mt-6 text-center text-gray-600">
+          Don&apos;t have an account?{' '}
+          <button
+            onClick={() => router.push('/register')}
+            className="text-indigo-600 hover:underline font-semibold focus:outline-none"
+          >
+            Register here
+          </button>
         </p>
       </div>
     </div>

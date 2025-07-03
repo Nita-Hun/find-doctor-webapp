@@ -13,6 +13,8 @@ public class DoctorDto {
     private Long hospitalId;
     private String hospitalName;
     private String status;
+    private int totalFeedbacks;    
+    private double averageRating;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

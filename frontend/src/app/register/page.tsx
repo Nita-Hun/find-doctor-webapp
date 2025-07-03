@@ -1,72 +1,115 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ name: '', email: '', password: ''});
-  const [message, setMessage] = useState('');
+  const router = useRouter();
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    role: 'PATIENT', // default role
+  });
+  const [error, setError] = useState('');
+  const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const validate = () => {
+    const errors: { email?: string; password?: string } = {};
+    if (!form.email) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = 'Invalid email format';
+    }
+    if (!form.password) {
+      errors.password = 'Password is required';
+    } else if (form.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
+    if (!validate()) return;
+
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/register', form);
-      setMessage(res.data.message);
+      await apiClient.post('/api/auth/register', form);
+      router.push('/login');
     } catch (err: any) {
-      setMessage(err.response?.data?.error || 'Something went wrong');
+      setError(err.response?.data?.error || 'Registration failed');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-md rounded-md w-full max-w-md p-8 text-center">
-        <div className="flex justify-center mb-4">
-          <img src="/key-icon.png" alt="Key Icon" className="h-12 w-12" />
-        </div>
-        <h1 className="text-2xl font-semibold mb-6">Registration</h1>
-        <form onSubmit={handleRegister} className="flex flex-col gap-4 text-left">
-          <div>
-            <label className="block text-sm text-gray-600">Username</label>
-            <input
-              name="name"
-              type="name"
-              onChange={handleChange}
-              className="w-full border-b-2 focus:outline-none py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600">Email Address</label>
-            <input
-              name="email"
-              type="email"
-              onChange={handleChange}
-              className="w-full border-b-2 focus:outline-none py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600">Password</label>
-            <input
-              name="password"
-              type="password"
-              onChange={handleChange}
-              className="w-full border-b-2 focus:outline-none py-2"
-            />
-          </div>
-          
-          <button type="submit" className="bg-blue-600 text-white py-2 mt-2 rounded hover:bg-blue-700 transition">
-            REGISTER
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-100 to-pink-200 p-4">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-semibold mb-6 text-center text-gray-700">Create an Account</h1>
+        <form onSubmit={handleRegister} noValidate>
+          <label className="block mb-2 text-gray-600">Email</label>
+          <input
+            type="email"
+            name="email"
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+              formErrors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+
+          <label className="block mt-4 mb-2 text-gray-600">Password</label>
+          <input
+            type="password"
+            name="password"
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+              formErrors.password ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Enter your password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+          {formErrors.password && <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>}
+
+          <label className="block mt-4 mb-2 text-gray-600">Role</label>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400"
+          >
+            <option value="PATIENT">Patient</option>
+            <option value="DOCTOR">Doctor</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+
+          {error && <p className="text-red-600 text-center mt-4">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full mt-6 bg-pink-600 text-white py-3 rounded-md hover:bg-pink-700 transition-colors"
+          >
+            Register
           </button>
         </form>
-        {message && <p className="mt-4 text-sm text-red-500">{message}</p>}
-        <p className="mt-6 text-sm">
+
+        <p className="mt-6 text-center text-gray-600">
           Already have an account?{' '}
-          <a href="/login" className="text-blue-600 hover:underline">
-            Login
-          </a>
+          <button
+            onClick={() => router.push('/login')}
+            className="text-pink-600 hover:underline font-semibold focus:outline-none"
+          >
+            Login here
+          </button>
         </p>
       </div>
     </div>
