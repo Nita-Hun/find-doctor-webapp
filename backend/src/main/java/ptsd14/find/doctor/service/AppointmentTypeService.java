@@ -1,6 +1,10 @@
 package ptsd14.find.doctor.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.dto.AppointmentTypeDto;
 import ptsd14.find.doctor.exception.DuplicateResourceException;
@@ -9,9 +13,7 @@ import ptsd14.find.doctor.mapper.AppointmentTypeMapper;
 import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.repository.AppointmentTypeRepository;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,20 +22,28 @@ public class AppointmentTypeService {
     private final AppointmentTypeRepository appointmentTypeRepository;
     private final AppointmentTypeMapper appointmentTypeMapper;
 
+    @Transactional(readOnly = true)
+    public Page<AppointmentTypeDto> getAll(Pageable pageable, String search) {
+        Page<AppointmentType> types;
+
+        if (search != null && !search.trim().isEmpty()) {
+            String trimmedSearch = search.trim();
+            types = appointmentTypeRepository.findByNameContainingIgnoreCase(trimmedSearch, pageable);
+        } else {
+            types = appointmentTypeRepository.findAll(pageable);
+        }
+
+        return types.map(appointmentTypeMapper::toDto);
+    }
+
     public Optional<AppointmentTypeDto> getById(Long id) {
         return appointmentTypeRepository.findById(id)
                 .map(appointmentTypeMapper::toDto);
     }
 
-    public List<AppointmentTypeDto> findAll() {
-        return appointmentTypeRepository.findAll().stream()
-                .map(appointmentTypeMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
     public AppointmentTypeDto create(AppointmentTypeDto dto) {
         validateNameUniqueness(dto.getName(), null);
-        
+
         AppointmentType appointmentType = appointmentTypeMapper.toEntity(dto);
         appointmentType.setId(null); // Ensure new entity
         AppointmentType saved = appointmentTypeRepository.save(appointmentType);
@@ -52,6 +62,9 @@ public class AppointmentTypeService {
 
         if (dto.getPrice() != null) {
             existing.setPrice(dto.getPrice());
+        }
+        if (dto.getDuration() != null) {
+            existing.setDuration(dto.getDuration());
         }
 
         AppointmentType updated = appointmentTypeRepository.save(existing);
@@ -78,14 +91,5 @@ public class AppointmentTypeService {
                 String.format("Appointment type with name '%s' already exists", name)
             );
         }
-    }
-
-    // Additional repository query methods
-    public boolean existsByName(String name) {
-        return appointmentTypeRepository.existsByName(name);
-    }
-
-    public boolean existsByNameAndIdNot(String name, Long id) {
-        return appointmentTypeRepository.existsByNameAndIdNot(name, id);
     }
 }

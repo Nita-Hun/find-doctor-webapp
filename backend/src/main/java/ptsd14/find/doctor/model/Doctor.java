@@ -70,7 +70,6 @@ public class Doctor {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

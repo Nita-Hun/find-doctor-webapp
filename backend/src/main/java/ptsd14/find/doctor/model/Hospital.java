@@ -2,7 +2,6 @@ package ptsd14.find.doctor.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
@@ -58,8 +57,6 @@ public class Hospital {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

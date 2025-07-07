@@ -7,6 +7,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class UpdateUserRequest {
     private String email;
+    private String password;
     private String role;
+    private String profilePhotoUrl;
 }
 

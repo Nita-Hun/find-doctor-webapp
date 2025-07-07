@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Toaster } from "react-hot-toast"; // ✅ Import here
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { Inter } from 'next/font/google';
 
@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        <Toaster position="top-right" /> {/* ✅ Add this line */}
+        <Toaster position="top-right" />
         {children}
       </body>
     </html>

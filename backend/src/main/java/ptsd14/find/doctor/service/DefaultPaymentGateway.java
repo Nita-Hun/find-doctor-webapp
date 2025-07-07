@@ -1,15 +1,15 @@
-package ptsd14.find.doctor.service;
+// package ptsd14.find.doctor.service;
 
-import java.math.BigDecimal;
+// import java.math.BigDecimal;
 
-import org.springframework.stereotype.Service;
+// import org.springframework.stereotype.Service;
 
-@Service
-public class DefaultPaymentGateway implements PaymentGateway {
+// @Service
+// public class DefaultPaymentGateway implements PaymentGateway {
 
-    @Override
-    public PaymentResult charge(String cardNumber, String cvv, String expiryDate, BigDecimal amount) {
+//     @Override
+//     public PaymentResult charge(String cardNumber, String cvv, String expiryDate, BigDecimal amount) {
 
-        return new PaymentResult(true, null);
-    }
-}
+//         return new PaymentResult(true, null);
+//     }
+// }

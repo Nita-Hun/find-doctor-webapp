@@ -16,5 +16,13 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     Page<FeedbackDto> findAllByAppointmentId(Long appointmentId, Pageable pageable);
 
     List<Feedback> findByAppointment_Doctor_Id(Long id);
+
+    Page<Feedback> findByRatingAndCommentContainingIgnoreCase(Integer rating, String trim, Pageable pageable);
+
+    Page<Feedback> findByRating(Integer rating, Pageable pageable);
+
+    Page<Feedback> findByCommentContainingIgnoreCase(String trim, Pageable pageable);
+
+  
     
 }

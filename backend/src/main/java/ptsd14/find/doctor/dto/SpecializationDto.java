@@ -11,12 +11,4 @@ public class SpecializationDto {
     private String name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // // Static factory method for easy conversion
-    // public static SpecializationDto fromEntity(Specialization specialization) {
-    //     SpecializationDto dto = new SpecializationDto();
-    //     dto.setId(specialization.getId());
-    //     dto.setName(specialization.getName());
-    //     return dto;
-    // }
 }

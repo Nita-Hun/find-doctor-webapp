@@ -17,6 +17,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -43,6 +44,11 @@ public class AppointmentType {
     @DecimalMin(value = "0.0", inclusive = true, message = "Price must be zero or more")
     private BigDecimal price;
 
+    @NotNull(message = "Duration is required")
+    @Min(value = 1, message = "Duration must be at least 1 minute")
+    @Column(nullable = false)
+    private Integer duration;
+
     @OneToMany(mappedBy = "appointmentType", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Appointment> appointments;
@@ -57,13 +63,8 @@ public class AppointmentType {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-
-    
+    }   
 }

@@ -39,6 +39,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers("/api/webhook").permitAll()
+                .requestMatchers("/api/payments/unpaid-appointments/**").permitAll()
+                .requestMatchers("/api/payments/create-payment-intent/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/appointments/**", "/api/doctors/**", "/api/hospitals/**", "/api/patients/**", "/api/specializations/**", "/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

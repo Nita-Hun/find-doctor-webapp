@@ -1,7 +1,7 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/FindDoctorApplication.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/CorsConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/DataSeeder.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/MapperConfig.java
+/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/OpenApiConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/SecurityConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/StripeConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/WebConfig.java
@@ -15,6 +15,7 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/controller/PatientController.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/controller/PaymentController.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/controller/SpecializationController.java
+/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/controller/StripeWebhookController.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/controller/UserController.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/dto/AdminUserRequest.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/dto/AppointmentDto.java
@@ -34,6 +35,7 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/dto/StripeResponse.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/dto/UpdateUserRequest.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/dto/UserDto.java
+/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/exception/ApiError.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/exception/AppointmentNotFoundException.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/exception/DuplicateResourceException.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/exception/GlobalExceptionHandler.java
@@ -48,14 +50,7 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapper/PatientMapper.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapper/PaymentMapper.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapper/SpecializationMapper.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/AppointmentMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/AppointmentTypeMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/DoctorMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/FeedbackMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/HospitalImpleMapper.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/PatientMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/PaymentMapperImpl.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapperImpl/SpecializationMapperImpl.java
+/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/mapper/UserMapper.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/model/Appointment.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/model/AppointmentType.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/model/Doctor.java

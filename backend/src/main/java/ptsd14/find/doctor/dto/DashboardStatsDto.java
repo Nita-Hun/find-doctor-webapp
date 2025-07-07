@@ -29,7 +29,7 @@ public class DashboardStatsDto {
         private String patientName;
         private String doctorName;
         private String typeName;
-        private String status;
+        private String note;
         private LocalDateTime dateTime;
     }
 }

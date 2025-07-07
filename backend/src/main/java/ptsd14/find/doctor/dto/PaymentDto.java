@@ -1,8 +1,9 @@
 package ptsd14.find.doctor.dto;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import lombok.Data;
 
 @Data
 public class PaymentDto {
@@ -12,4 +13,5 @@ public class PaymentDto {
     private String paymentMethod;
     private LocalDateTime paidAt;
     private Long appointmentId;
+    private String doctorName;
 }

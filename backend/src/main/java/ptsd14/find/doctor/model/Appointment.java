@@ -41,9 +41,9 @@ public class Appointment {
 
     @Column(nullable = false)
     @NotBlank(message = "Status is required")
-    private String status;
+    private String note;
 
-    private String attachment;  // Optional field (nullable)
+    private String attachment;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -55,22 +55,18 @@ public class Appointment {
     @JsonIgnore
     private List<Email> emails;
 
-    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    private List<Payment> payments;
+    private Payment payment;
 
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Feedback> feedbacks;
 
-
-    // Pre-persist method to set createdAt (if not using default)
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

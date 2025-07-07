@@ -11,6 +11,7 @@ public class AppointmentTypeDto {
     private Long id;
     private String name;
     private BigDecimal price;
+    private Integer duration;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     

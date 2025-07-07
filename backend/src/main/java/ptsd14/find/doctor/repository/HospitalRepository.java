@@ -1,7 +1,7 @@
 package ptsd14.find.doctor.repository;
 
-import java.util.Optional;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ptsd14.find.doctor.model.Hospital;
@@ -13,6 +13,7 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long>{
 
     boolean existsByNameAndIdNot(String name, Long id);
 
-    Optional<Hospital> findById(Long id);
+    Page<Hospital> findByNameContainingIgnoreCase(String trimmedSearch, Pageable pageable);
+
     
 }

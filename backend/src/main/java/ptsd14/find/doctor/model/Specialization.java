@@ -2,9 +2,7 @@ package ptsd14.find.doctor.model;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -14,7 +12,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "specializations") // fixed typo: "sepcializations" → "specializations"
+@Table(name = "specializations")
 public class Specialization {
 
     @Id
@@ -35,14 +33,11 @@ public class Specialization {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
     @OneToMany(mappedBy = "specialization", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore // Prevent infinite loop during JSON serialization
+    @JsonIgnore
     private List<Doctor> doctors;
 }

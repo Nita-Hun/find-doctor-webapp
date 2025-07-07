@@ -1,31 +1,32 @@
 package ptsd14.find.doctor.mapper;
 
-import java.time.LocalDateTime;
-
-import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import ptsd14.find.doctor.dto.HospitalDto;
-import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.model.Hospital;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = "spring",
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
 public interface HospitalMapper {
-    HospitalDto toDto(Hospital hospital);
-    Hospital toEntity(HospitalDto dto);
 
-    @Mapping(target = "id", ignore = true) // Prevent ID override
+    // ENTITY -> DTO
+    HospitalDto toDto(Hospital hospital);
+
+    // DTO -> ENTITY
+    @Mapping(target = "doctors", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateFromDto(HospitalDto dto, @MappingTarget Hospital entity);
+    Hospital toEntity(HospitalDto dto);
 
-    @AfterMapping
-    default void handleTimestamps(@MappingTarget AppointmentType entity) {
-        if (entity.getId() == null) {
-            entity.setCreatedAt(LocalDateTime.now());
-        }
-        entity.setUpdatedAt(LocalDateTime.now());
-    }
+    // UPDATE EXISTING ENTITY FROM DTO
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "doctors", ignore = true)
+    void updateFromDto(HospitalDto dto, @MappingTarget Hospital entity);
 }

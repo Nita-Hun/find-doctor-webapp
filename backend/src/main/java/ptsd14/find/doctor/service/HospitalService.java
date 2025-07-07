@@ -1,6 +1,10 @@
 package ptsd14.find.doctor.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.dto.HospitalDto;
 import ptsd14.find.doctor.exception.DuplicateResourceException;
@@ -8,9 +12,7 @@ import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.HospitalMapper;
 import ptsd14.find.doctor.model.Hospital;
 import ptsd14.find.doctor.repository.HospitalRepository;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +26,18 @@ public class HospitalService {
                 .map(hospitalMapper::toDto);
     }
     
-    public List<HospitalDto> findAll() {
-        return hospitalRepository.findAll().stream()
-                .map(hospitalMapper::toDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<HospitalDto> getAll(Pageable pageable, String search) {
+        Page<Hospital> hospitals;
+
+        if (search != null && !search.trim().isEmpty()) {
+            String trimmedSearch = search.trim();
+            hospitals = hospitalRepository.findByNameContainingIgnoreCase(trimmedSearch, pageable);
+        } else {
+            hospitals = hospitalRepository.findAll(pageable);
+        }
+
+        return hospitals.map(hospitalMapper::toDto);
     }
 
     public HospitalDto create(HospitalDto dto) {

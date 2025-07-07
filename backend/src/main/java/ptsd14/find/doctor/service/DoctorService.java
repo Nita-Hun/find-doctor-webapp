@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ptsd14.find.doctor.dto.DoctorDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.DoctorMapper;
@@ -33,10 +32,39 @@ public class DoctorService {
     private final SpecializationRepos specializationRepository;
     private final FeedbackRepository feedbackRepository;
 
-    @Transactional(readOnly = true)
-    public Page<DoctorDto> getAll(Pageable pageable) {
-        return doctorRepository.findAll(pageable)
-                .map(doctorMapper::toDto);
+   @Transactional(readOnly = true)
+    public Page<DoctorDto> getAll(Pageable pageable, String search, String status) {
+        Page<Doctor> doctors;
+
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty();
+
+        if (hasStatus && hasSearch) {
+            // Search by name and filter by status
+            String trimmedSearch = search.trim();
+            String trimmedStatus = status.trim();
+            doctors = doctorRepository.findByStatusIgnoreCaseAndFirstnameContainingIgnoreCaseOrStatusIgnoreCaseAndLastnameContainingIgnoreCase(
+                trimmedStatus, trimmedSearch,
+                trimmedStatus, trimmedSearch,
+                pageable
+            );
+        } else if (hasStatus) {
+            // Filter by status only
+            doctors = doctorRepository.findByStatusIgnoreCase(status.trim(), pageable);
+        } else if (hasSearch) {
+            // Search by name only
+            String trimmed = search.trim();
+            doctors = doctorRepository.findByFirstnameContainingIgnoreCaseOrLastnameContainingIgnoreCase(
+                trimmed,
+                trimmed,
+                pageable
+            );
+        } else {
+            // No filters
+            doctors = doctorRepository.findBy(pageable);
+        }
+
+        return doctors.map(doctorMapper::toDto);
     }
     @Transactional(readOnly = true)
     public Optional<DoctorDto> getById(Long id) {

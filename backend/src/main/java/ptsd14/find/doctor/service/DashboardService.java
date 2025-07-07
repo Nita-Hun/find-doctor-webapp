@@ -59,7 +59,7 @@ public class DashboardService {
             s.setPatientName(a.getPatient().getFirstname() + " " + a.getPatient().getLastname());
             s.setDoctorName(a.getDoctor().getFirstname() + " " + a.getDoctor().getLastname());
             s.setTypeName(a.getAppointmentType().getName());
-            s.setStatus(a.getStatus());
+            s.setNote(a.getNote());
             return s;
         })
         .collect(Collectors.toList());

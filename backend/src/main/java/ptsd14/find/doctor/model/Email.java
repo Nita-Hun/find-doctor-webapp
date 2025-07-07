@@ -18,7 +18,7 @@ public class Email {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
-    private Patient patient;  // ✅ fixed from 'Patient' to 'PatientInfo'
+    private Patient patient; 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id", nullable = false)
@@ -32,5 +32,5 @@ public class Email {
     private String subject;
     private String content;
 
-    private LocalDateTime sentAt; // ✅ fixed typo from 'LocalDataTime'
+    private LocalDateTime sentAt;
 }

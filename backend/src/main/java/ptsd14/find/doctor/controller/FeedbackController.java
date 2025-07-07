@@ -1,11 +1,14 @@
 package ptsd14.find.doctor.controller;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import ptsd14.find.doctor.dto.FeedbackDto;
 import ptsd14.find.doctor.service.FeedbackService;
 
@@ -20,12 +23,17 @@ public class FeedbackController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<FeedbackDto>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+        @RequestParam(required = false, defaultValue = "0") Integer page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) Integer rating
     ) {
-        return ResponseEntity.ok(
-                feedbackService.getAll(PageRequest.of(page, size))
-        );
+        int pageNumber = (page != null && page >= 0) ? page : 0;
+
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "rating"));
+        Page<FeedbackDto> feedbacksPage = feedbackService.getAll(pageable, search, rating);
+
+        return ResponseEntity.ok(feedbacksPage);
     }
 
     @GetMapping("/{id}")

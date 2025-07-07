@@ -1,6 +1,7 @@
 package ptsd14.find.doctor.service;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,6 @@ import ptsd14.find.doctor.repository.*;
 
 import java.util.Optional;
 
-
 @Service
 @RequiredArgsConstructor
 public class AppointmentService {
@@ -25,21 +25,27 @@ public class AppointmentService {
     private final AppointmentTypeRepository appointmentTypeRepository;
 
     @Transactional(readOnly = true)
-    public Page<AppointmentDto> getAll(Pageable pageable) {
-        return appointmentRepository.findAll(pageable)
-                .map(appointmentMapper::toDto);
-    }
+        public Page<AppointmentDto> getAll(Pageable pageable, String search) {
+        if (search == null || search.trim().isEmpty()) {
+                Page<Appointment> appointments = appointmentRepository.findAll(pageable);
+                return appointments.map(appointmentMapper::toDto);
+        } else {
+                Page<Appointment> appointments = appointmentRepository.findByDoctorNameContainingIgnoreCase(search.trim(), pageable);
+                return appointments.map(appointmentMapper::toDto);
+        }
+        }
+
 
     @Transactional(readOnly = true)
-    public Optional<AppointmentDto> getById(Long id) {
+        public Optional<AppointmentDto> getById(Long id) {
         return appointmentRepository.findById(id)
                 .map(appointmentMapper::toDto);
     }
 
-    public AppointmentDto create(AppointmentDto dto) {
+    @Transactional
+        public AppointmentDto create(AppointmentDto dto) {
         Appointment appointment = appointmentMapper.toEntity(dto);
 
-        // Set relationships
         Doctor doctor = doctorRepository.findById(dto.getDoctorId())
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
         Patient patient = patientRepository.findById(dto.getPatientId())
@@ -52,18 +58,19 @@ public class AppointmentService {
         appointment.setAppointmentType(appointmentType);
 
         Appointment saved = appointmentRepository.save(appointment);
-        return appointmentMapper.toDto(saved);
-    }
+        
+        return appointmentMapper.toDto(saved); 
+        }
 
-    public AppointmentDto update(Long id, AppointmentDto dto) {
+        @Transactional
+        public AppointmentDto update(Long id, AppointmentDto dto) {
         Appointment existing = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
 
         existing.setDateTime(dto.getDateTime());
-        existing.setStatus(dto.getStatus());
+        existing.setNote(dto.getNote());
         existing.setAttachment(dto.getAttachment());
-
-        // Update relationships if needed
+        
         Doctor doctor = doctorRepository.findById(dto.getDoctorId())
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
         Patient patient = patientRepository.findById(dto.getPatientId())
@@ -77,7 +84,8 @@ public class AppointmentService {
 
         Appointment updated = appointmentRepository.save(existing);
         return appointmentMapper.toDto(updated);
-    }
+        }
+
 
     public void delete(Long id) {
         if (!appointmentRepository.existsById(id)) {

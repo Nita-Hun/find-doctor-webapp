@@ -3,6 +3,7 @@ package ptsd14.find.doctor.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -24,13 +26,20 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<AppointmentDto>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+    public ResponseEntity<Page<AppointmentDto>> getAllAppointments(
+        @RequestParam(required = false, defaultValue = "0") Integer page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search
     ) {
-        return ResponseEntity.ok(appointmentService.getAll(PageRequest.of(page, size)));
+        int pageNumber = (page != null && page >= 0) ? page : 0;
+
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "doctorFirstname"));
+        Page<AppointmentDto> appointmentsPage = appointmentService.getAll(pageable, search);
+
+        return ResponseEntity.ok(appointmentsPage);
     }
 
     @GetMapping("/{id}")
@@ -41,15 +50,55 @@ public class AppointmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AppointmentDto> create(@RequestBody AppointmentDto dto) {
+    public ResponseEntity<AppointmentDto> create(
+            @RequestParam("doctorId") Long doctorId,
+            @RequestParam("patientId") Long patientId,
+            @RequestParam("appointmentTypeId") Long appointmentTypeId,
+            @RequestParam("dateTime") LocalDateTime dateTime,
+            @RequestParam("note") String note,
+            @RequestParam(value = "attachment", required = false) MultipartFile attachment
+    ) {
+        AppointmentDto dto = new AppointmentDto();
+        dto.setDoctorId(doctorId);
+        dto.setPatientId(patientId);
+        dto.setAppointmentTypeId(appointmentTypeId);
+        dto.setDateTime(dateTime);
+        dto.setNote(note);
+
+        // If a file is attached, upload it and set the URL
+        if (attachment != null && !attachment.isEmpty()) {
+            String fileUrl = saveAttachmentFile(attachment);
+            dto.setAttachment(fileUrl);
+        }
+
         return ResponseEntity.ok(appointmentService.create(dto));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AppointmentDto> update(@PathVariable Long id, @RequestBody AppointmentDto dto) {
+    public ResponseEntity<AppointmentDto> update(
+            @PathVariable Long id,
+            @RequestParam("doctorId") Long doctorId,
+            @RequestParam("patientId") Long patientId,
+            @RequestParam("appointmentTypeId") Long appointmentTypeId,
+            @RequestParam("dateTime") LocalDateTime dateTime,
+            @RequestParam("note") String note,
+            @RequestParam(value = "attachment", required = false) MultipartFile attachment
+    ) {
+        AppointmentDto dto = new AppointmentDto();
+        dto.setDoctorId(doctorId);
+        dto.setPatientId(patientId);
+        dto.setAppointmentTypeId(appointmentTypeId);
+        dto.setDateTime(dateTime);
+        dto.setNote(note);
+
+        if (attachment != null && !attachment.isEmpty()) {
+            String fileUrl = saveAttachmentFile(attachment);
+            dto.setAttachment(fileUrl);
+        }
+
         return ResponseEntity.ok(appointmentService.update(id, dto));
     }
 
@@ -60,32 +109,30 @@ public class AppointmentController {
         return ResponseEntity.noContent().build();
     }
 
-    // New endpoint for uploading attachment files
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadAttachment(@RequestParam("file") MultipartFile file) {
-        try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("File is empty");
-            }
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
 
+        String fileUrl = saveAttachmentFile(file);
+        return ResponseEntity.ok(fileUrl);
+    }
+
+    private String saveAttachmentFile(MultipartFile file) {
+        try {
             String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
             String uploadDir = "uploads/appointments/";
             File dir = new File(uploadDir);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-
             Path filepath = Paths.get(uploadDir + filename);
             Files.write(filepath, file.getBytes());
-
-            // Return relative URL or path for frontend to save in DB
-            String fileUrl = "/uploads/appointments/" + filename;
-            return ResponseEntity.ok(fileUrl);
-
+            return "/uploads/appointments/" + filename;
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to upload file");
+            throw new RuntimeException("Failed to save attachment file", e);
         }
     }
-        
 }

@@ -1,65 +1,72 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import DoctorFormModal from '@/components/DoctorFormModal';
-import Pagination from '@/components/Pagination';
-import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
+import { Pencil, Trash2 } from 'lucide-react';
+import Pagination from '@/components/Pagination';
+import { DoctorDto } from '@/types/DoctorDto';
+import { PagedResponse } from '@/types/PagedResponse';
+import { FiSearch } from 'react-icons/fi';
 
-interface Doctor {
-  id: number;
-  firstname: string;
-  lastname: string;
-  status: string;
-  hospitalId: number;
-  hospitalName?: string;
-  specializationId: number;
-  specializationName?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 export default function DoctorPage() {
-  const [types] = useState<Doctor[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [doctors, setDoctors] = useState<DoctorDto[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorDto | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const pageSize = 5;
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'ACTIVE', label: 'Active' },
+    { value: 'INACTIVE', label: 'Inactive' },
+    { value: 'ON_LEAVE', label: 'On Leave' },
+    { value: 'SUSPENDED', label: 'Suspended' }
+  ];
+
   const statusColors: Record<string, string> = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800',
-    on_leave: 'bg-yellow-100 text-yellow-800',
-    suspended: 'bg-red-100 text-red-800'
+    ACTIVE: 'bg-green-100 text-green-800',
+    INACTIVE: 'bg-gray-100 text-gray-800',
+    ON_LEAVE: 'bg-yellow-100 text-yellow-800',
+    SUSPENDED: 'bg-red-100 text-red-800'
   };
 
   const fetchDoctors = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/doctors');
-      console.log('API Response:', response.data); // Debug log
-      
-      // Handle different response formats
-      const doctorsData = Array.isArray(response.data) 
-        ? response.data 
-        : response.data?.content || response.data?.doctors || [];
-      
-      if (Array.isArray(doctorsData)) {
-        setDoctors(doctorsData);
-      } else {
-        setError('Invalid data format received from server');
-        setDoctors([]);
+      const response = await apiClient.get<PagedResponse<DoctorDto>>('/api/doctors', {
+        params: {
+          page: currentPage - 1,
+          size: pageSize,
+          search: searchTerm || undefined,
+          status: statusFilter || undefined,
+        },
+      });
+
+      const pagedData = response.data;
+
+      if (pagedData.content.length === 0 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
+      const data = response.data;
+      setDoctors(pagedData.content);
+      setTotalPages(data.page.totalPages);
+      setTotalItems(data.page.totalElements);
+    } catch (err: any) {
+      console.error('Error fetching doctors:', err);
       setError('Failed to load doctors. Please try again.');
-      setDoctors([]);
       toast.error('Failed to fetch doctors');
     } finally {
       setIsLoading(false);
@@ -68,14 +75,14 @@ export default function DoctorPage() {
 
   useEffect(() => {
     fetchDoctors();
-  }, [refreshKey]); // Add refreshKey as dependency
+  }, [refreshKey, currentPage, searchTerm, pageSize, statusFilter]);
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this doctor?')) {
       try {
         await apiClient.delete(`/api/doctors/${id}`);
         toast.success('Doctor deleted successfully');
-        setRefreshKey(prev => prev + 1); // Trigger refresh
+        setRefreshKey((prev) => prev + 1);
       } catch (error) {
         console.error('Error deleting doctor:', error);
         toast.error('Failed to delete doctor');
@@ -87,42 +94,23 @@ export default function DoctorPage() {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
-  const filteredTypes = types.filter(type => 
-    type.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    type.lastname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    type.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    type.hospitalId.toString().includes(searchTerm) ||
-    type.specializationId.toString().includes(searchTerm)
-    
-  );
 
-  // Filter doctors based on search term
-  const filteredDoctors = doctors.filter(doctor => {
-    const firstName = doctor.firstname || '';
-    const lastName = doctor.lastname || '';
-    const fullName = `${firstName} ${lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  });
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredDoctors.length / pageSize);
-  const paginatedDoctors = filteredDoctors.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
 
   const handleSuccess = () => {
-    setRefreshKey(prev => prev + 1); // Force refresh after successful operation
+    setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedDoctor(null);
-    setCurrentPage(1); // Reset to first page
   };
+
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    if(isNaN(date.getTime())) return 'N/A';
-    
-    return new Date(dateString).toLocaleString('en-US', {
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -130,9 +118,10 @@ export default function DoctorPage() {
       minute: '2-digit',
     });
   };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header and Add Doctor button */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Doctor Management</h1>
         <button
@@ -140,7 +129,7 @@ export default function DoctorPage() {
             setSelectedDoctor(null);
             setShowModal(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors text-sm"
         >
           + Add New Doctor
         </button>
@@ -149,20 +138,50 @@ export default function DoctorPage() {
       {/* Search and filter bar */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <div className="flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearch}
-            placeholder="Search by doctor name..."
-            className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-gray-600">Status:</span>
-            <select className="p-2 border border-gray-300 rounded-md">
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+          <div className="relative flex-grow text-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="text-gray-400" />
+              </div>
+                  <input 
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    placeholder="Search doctors..."
+                    className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-gray-600 text-sm whitespace-nowrap">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
+              >
+                {statusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-gray-600 text-sm whitespace-nowrap">Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
+              >
+                {[5, 10, 20, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -175,121 +194,151 @@ export default function DoctorPage() {
       )}
 
       {/* Error state */}
-      {isLoading && <LoadingState />}
-            {error && !isLoading && (
-              <ErrorState 
-                error={error} 
-                onRetry={() => setRefreshKey(prev => prev + 1)} 
-              />
-            )}
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={() => setRefreshKey((prev) => prev + 1)}
+        />
+      )}
 
       {/* Empty state */}
-      {!isLoading && !error && filteredDoctors.length === 0 && (
-        <div className="bg-white p-8 rounded-lg shadow text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-gray-900">
-            {searchTerm ? 'No matching doctors found' : 'No doctors available'}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {searchTerm ? 'Try adjusting your search' : 'Get started by adding a new doctor'}
-          </p>
-          <div className="mt-6">
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedDoctor(null);
-                setShowModal(true);
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
+      {!isLoading && !error && doctors.length === 0 && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white z-20">
+          <div className="max-w-md w-full p-8 rounded-lg shadow text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Doctor
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
+              {searchTerm || statusFilter ? 'No matching doctors found' : 'No doctors available'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm || statusFilter ? 'Try adjusting your search/filters' : 'Get started by adding a new doctor'}
+            </p>
+            <div className="mt-6">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('');
+                  setSelectedDoctor(null);
+                  setShowModal(true);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-400 focus:outline-none"
+              >
+                <svg
+                  className="-ml-1 mr-2 h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Add Doctor
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Doctors table */}
-      {!isLoading && !error && filteredDoctors.length > 0 && (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+      {!isLoading && !error && doctors.length > 0 && (
+        <div className="bg-white shadow rounded-lg overflow-hidden flex flex-col h-[500px]">
+          <div className="flex-1 overflow-y-auto overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Doctor
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Specialization
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Hospital
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Updated
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+              <thead className="bg-blue-600 hidden md:table-header-group">
+                <tr className="transition-colors duration-150">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Doctor</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Specialization</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Hospital</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Last Updated</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedDoctors.map((doctor) => (
-                  <tr key={doctor.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-blue-600 font-medium">
+
+              <tbody className="divide-y divide-gray-200 text-sm">
+                {doctors.map((doctor) => (
+                  <tr
+                    key={doctor.id}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-gray-200`}
+                  >
+                    {/* ID */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">ID</span>
+                      <span className="text-gray-800">#{doctor.id}</span>
+                    </td>
+                    {/* Doctor */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Doctor</span>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                          <span className="text-blue-600 font-semibold">
                             {doctor.firstname.charAt(0)}{doctor.lastname.charAt(0)}
                           </span>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {doctor.firstname} {doctor.lastname}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ID: {doctor.id}
-                          </div>
-                        </div>
+                        <span className="text-gray-800">{doctor.firstname} {doctor.lastname}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{doctor.specializationName || 'N/A'}</div>
+
+                    {/* Specialization */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Specialization</span>
+                      <span>{doctor.specializationName || 'N/A'}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{doctor.hospitalName || 'N/A'}</div>
+
+                    {/* Hospital */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Hospital</span>
+                      <span>{doctor.hospitalName || 'N/A'}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[doctor.status.toLowerCase()] || 'bg-gray-100 text-gray-800'}`}>
+
+                    {/* Status */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Status</span>
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[doctor.status] || 'bg-gray-100 text-gray-800'}`}>
                         {doctor.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(doctor.updatedAt)}
+
+                    {/* Last Updated */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Last Updated</span>
+                      <span>{formatDate(doctor.updatedAt)}</span>
                     </td>
-                    
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                    {/* Actions */}
+                    <td className="flex space-x-2 justify-end gap-2 md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <button
                         onClick={() => {
                           setSelectedDoctor(doctor);
                           setShowModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit"
                       >
-                        Edit
+                        <Pencil size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(doctor.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete"
                       >
-                        Delete
+                        <Trash2 size={18} />
                       </button>
                     </td>
                   </tr>
@@ -298,18 +347,16 @@ export default function DoctorPage() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Pagination Controls */}
           <Pagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              totalItems={filteredDoctors.length}
-              pageSize={pageSize}
-            />
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
-      {/* Doctor Form Modal */}
+      {/* Modal */}
       {showModal && (
         <DoctorFormModal
           doctor={selectedDoctor}
@@ -319,4 +366,4 @@ export default function DoctorPage() {
       )}
     </div>
   );
-} 
+}

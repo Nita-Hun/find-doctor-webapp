@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ptsd14.find.doctor.dto.FeedbackDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.FeedbackMapper;
@@ -25,11 +26,33 @@ public class FeedbackService {
     private final AppointmentRepository appointmentRepository;
     private final FeedbackMapper feedbackMapper;
 
-    @Transactional(readOnly = true)
-    public Page<FeedbackDto> getAll(Pageable pageable) {
-    return feedbackRepository.findAll(pageable)
-            .map(feedbackMapper::toDto);
+   @Transactional(readOnly = true)
+    public Page<FeedbackDto> getAll(Pageable pageable, String search, Integer rating) {
+    Page<Feedback> feedbacks;
+
+    boolean hasSearch = search != null && !search.trim().isEmpty();
+    boolean hasRating = rating != null && rating >= 1 && rating <= 5;
+
+    if (hasSearch && hasRating) {
+        feedbacks = feedbackRepository.findByRatingAndCommentContainingIgnoreCase(
+            rating,
+            search.trim(),
+            pageable
+        );
+    } else if (hasRating) {
+        feedbacks = feedbackRepository.findByRating(rating, pageable);
+    } else if (hasSearch) {
+        feedbacks = feedbackRepository.findByCommentContainingIgnoreCase(
+            search.trim(),
+            pageable
+        );
+    } else {
+        feedbacks = feedbackRepository.findAll(pageable);
     }
+
+    return feedbacks.map(feedbackMapper::toDto);
+}
+
     @Transactional(readOnly = true)
     public Optional<FeedbackDto> getById(Long id) {
         return feedbackRepository.findById(id)

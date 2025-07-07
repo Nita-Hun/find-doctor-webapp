@@ -1,35 +1,31 @@
 package ptsd14.find.doctor.mapper;
 
-import java.time.LocalDateTime;
-
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-
+import org.mapstruct.*;
 import ptsd14.find.doctor.dto.DoctorDto;
-import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.model.Doctor;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DoctorMapper {
-    
+
+    // ENTITY -> DTO
     @Mapping(target = "specializationId", source = "specialization.id")
     @Mapping(target = "specializationName", source = "specialization.name")
     @Mapping(target = "hospitalId", source = "hospital.id")
     @Mapping(target = "hospitalName", source = "hospital.name")
     DoctorDto toDto(Doctor doctor);
 
+    // DTO -> ENTITY
     @Mapping(target = "specialization", ignore = true)
     @Mapping(target = "hospital", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Doctor toEntity(DoctorDto doctorDto);
-    @AfterMapping
-    default void handleTimestamps(@MappingTarget AppointmentType entity) {
-        if (entity.getId() == null) {
-            entity.setCreatedAt(LocalDateTime.now());
-        }
-        entity.setUpdatedAt(LocalDateTime.now());
-    }
+
+    // UPDATE EXISTING ENTITY FROM DTO
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "specialization", ignore = true)
+    @Mapping(target = "hospital", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateFromDto(DoctorDto dto, @MappingTarget Doctor entity);
 }

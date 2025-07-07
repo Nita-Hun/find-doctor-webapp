@@ -3,244 +3,246 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
-
-interface AppointmentDto {
-  id?: number;
-  doctorId: number | '';
-  patientId: number | '';
-  appointmentTypeId: number | '';
-  dateTime: string;
-  status: string;
-  attachment?: string;
-}
-
-interface Doctor {
-  id: number;
-  firstname: string;
-  lastname: string;
-}
-
-interface Patient {
-  id: number;
-  firstname: string;
-  lastname: string;
-}
-
-interface AppointmentType {
-  id: number;
-  name: string;
-}
-
-interface AppointmentFormModalProps {
-  appointment?: AppointmentDto | null;
-  onClose: () => void;
-  onSuccess: () => void;
-}
+import { Appointment, SelectOption, AppointmentFormModalProps } from '@/types/Appointment';
+import { FiX } from 'react-icons/fi';
 
 export default function AppointmentFormModal({ appointment, onClose, onSuccess }: AppointmentFormModalProps) {
-  const [form, setForm] = useState<AppointmentDto>({
-    doctorId: '',
-    patientId: '',
-    appointmentTypeId: '',
-    dateTime: '',
-    status: '',
-    attachment: '',
-    ...appointment,
-  });
+  // Controlled state for the form fields, initialized from appointment or defaults
+  const [doctorId, setDoctorId] = useState<number>(appointment?.doctorId ?? 0);
+  const [patientId, setPatientId] = useState<number>(appointment?.patientId ?? 0);
+  const [appointmentTypeId, setAppointmentTypeId] = useState<number>(appointment?.appointmentTypeId ?? 0);
+  const [dateTime, setDateTime] = useState<string>(appointment?.dateTime ?? '');
+  const [note, setNote] = useState<string>(appointment?.note ?? '');
+  const [attachment, setAttachment] = useState<File | null>(null);
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [types, setTypes] = useState<AppointmentType[]>([]);
+
+  // Dropdown options
+  const [doctors, setDoctors] = useState<SelectOption[]>([]);
+  const [patients, setPatients] = useState<SelectOption[]>([]);
+  const [appointmentTypes, setAppointmentTypes] = useState<SelectOption[]>([]);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
+    async function fetchDropdownData() {
       try {
-        const [docRes, patRes, typeRes] = await Promise.all([
+        const [doctorsRes, patientsRes, typesRes] = await Promise.all([
           apiClient.get('/api/doctors'),
           apiClient.get('/api/patients'),
           apiClient.get('/api/appointment-types'),
         ]);
-        setDoctors(docRes.data.content || docRes.data);
-        setPatients(patRes.data.content || patRes.data);
-        setTypes(typeRes.data.content || typeRes.data);
-      } catch {
+
+        // Normalize and sort by full name (A-Z)
+        const normalizeOptions = (data: any[], nameKeys: [string, string]) =>
+          data
+            .map(d => ({ id: d.id, name: `${d[nameKeys[0]]} ${d[nameKeys[1]]}`.trim() }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        setDoctors(normalizeOptions(doctorsRes.data.content ?? doctorsRes.data, ['firstname', 'lastname']));
+        setPatients(normalizeOptions(patientsRes.data.content ?? patientsRes.data, ['firstname', 'lastname']));
+        setAppointmentTypes(
+          (typesRes.data.content ?? typesRes.data)
+            .map((t: any) => ({ id: t.id, name: t.name }))
+            .sort((a: any, b: any) => a.name.localeCompare(b.name))
+        );
+      } catch (error) {
         toast.error('Failed to load form data');
       }
-    };
-    loadData();
+    }
+
+    fetchDropdownData();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]:
-        name === 'doctorId' ||
-        name === 'patientId' ||
-        name === 'appointmentTypeId'
-          ? Number(value)
-          : value,
-    }));
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // Upload image handler
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await apiClient.post('/api/appointments/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setForm((prev) => ({ ...prev, attachment: res.data }));
-      toast.success('Image uploaded!');
-    } catch {
-      toast.error('Image upload failed');
-    }
-  };
-
-  const handleSubmit = async () => {
-    // basic validation
-    if (
-      !form.doctorId ||
-      !form.patientId ||
-      !form.appointmentTypeId ||
-      !form.dateTime ||
-      !form.status
-    ) {
+    if (!doctorId || !patientId || !appointmentTypeId || !dateTime) {
       toast.error('Please fill all required fields');
       return;
     }
 
+    setLoading(true);
+
     try {
-      if (form.id) {
-        await apiClient.put(`/api/appointments/${form.id}`, form);
-        toast.success('Appointment updated!');
+      const formData = new FormData();
+      formData.append('doctorId', doctorId.toString());
+      formData.append('patientId', patientId.toString());
+      formData.append('appointmentTypeId', appointmentTypeId.toString());
+      formData.append('dateTime', dateTime);
+      formData.append('note', note);
+      if (attachment) formData.append('attachment', attachment);
+
+      if (appointment?.id) {
+        await apiClient.put(`/api/appointments/${appointment.id}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        toast.success('Appointment updated successfully');
       } else {
-        await apiClient.post('/api/appointments', form);
-        toast.success('Appointment created!');
+        await apiClient.post('/api/appointments', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        toast.success('Appointment created successfully');
       }
       onSuccess();
-      onClose();
-    } catch {
+    } catch (error) {
       toast.error('Failed to save appointment');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-full overflow-auto">
-        <h2 className="text-xl font-semibold mb-4">
-          {form.id ? 'Edit' : 'Add'} Appointment
-        </h2>
-
-        <div className="space-y-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+            {/* Modified header section to match first modal */}
+            <div className="flex justify-between items-center border-b pb-4 mb-4">
+              <h2 className="text-xl font-semibold">
+                {appointment ? 'Edit Appointment' : 'Add New Appointment'}
+              </h2>
+              <button 
+                onClick={onClose} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX size={24} />
+              </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4 text-sm" noValidate>
           {/* Doctor */}
-          <select
-            name="doctorId"
-            value={form.doctorId ?? ''}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Doctor</option>
-            {doctors.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.firstname} {d.lastname}
+          <div>
+            <label htmlFor="doctor" className="block font-medium mb-1">
+              Doctor <span className="text-red-600">*</span>
+            </label>
+            <select
+              id="doctor"
+              value={doctorId}
+              onChange={(e) => setDoctorId(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            >
+              <option value={0} disabled>
+                Select doctor
               </option>
-            ))}
-          </select>
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Patient */}
-          <select
-            name="patientId"
-            value={form.patientId ?? ''}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Patient</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.firstname} {p.lastname}
+          <div>
+            <label htmlFor="patient" className="block font-medium mb-1">
+              Patient <span className="text-red-600">*</span>
+            </label>
+            <select
+              id="patient"
+              value={patientId}
+              onChange={(e) => setPatientId(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            >
+              <option value={0} disabled>
+                Select patient
               </option>
-            ))}
-          </select>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Appointment Type */}
-          <select
-            name="appointmentTypeId"
-            value={form.appointmentTypeId ?? ''}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Appointment Type</option>
-            {types.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+          <div>
+            <label htmlFor="appointmentType" className="block font-medium mb-1">
+              Appointment Type <span className="text-red-600">*</span>
+            </label>
+            <select
+              id="appointmentType"
+              value={appointmentTypeId}
+              onChange={(e) => setAppointmentTypeId(Number(e.target.value))}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            >
+              <option value={0} disabled>
+                Select type
               </option>
-            ))}
-          </select>
+              {appointmentTypes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Date Time */}
-          <input
-            type="datetime-local"
-            name="dateTime"
-            value={form.dateTime ?? ''}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          />
+          {/* Date & Time */}
+          <div>
+            <label htmlFor="dateTime" className="block font-medium mb-1">
+              Date & Time <span className="text-red-600">*</span>
+            </label>
+            <input
+              id="dateTime"
+              type="datetime-local"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            />
+          </div>
 
-          {/* Status */}
-          <input
-            type="text"
-            name="status"
-            value={form.status ?? ''}
-            onChange={handleChange}
-            placeholder="Status"
-            className="w-full border p-2 rounded"
-          />
+          {/* Note */}
+          <div>
+            <label htmlFor="note" className="block font-medium mb-1">
+              Note <span className="text-red-600">*</span>
+            </label>
+            <textarea
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="Additional notes..."
+            />
+          </div>
 
-          {/* Attachment Upload */}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            className="w-full"
-          />
+          {/* Attachment */}
+          <div>
+            <label htmlFor="attachment" className="block font-medium mb-1">
+              Attachment
+            </label>
+            <input
+              id="attachment"
+              type="file"
+              onChange={(e) => {
+                const files = e.target.files;
+                setAttachment(files && files.length > 0 ? files[0] : null);
+              }}
+              className="w-full"
+              accept="image/*,.pdf,.doc,.docx"
+            />
+          </div>
 
-          {/* Attachment preview */}
-          {form.attachment && (
-            <div className="mt-2">
-                <img 
-                src={`${form.attachment}`}
-                alt="Attachment preview"
-                className="w-full max-h-40 object-contain rounded border"
-                onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                }}
-                />
-            </div>
-            )}
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded border hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Save
-          </button>
-        </div>
+          {/* Buttons */}
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              {loading ? 'Saving...' : 'Create'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

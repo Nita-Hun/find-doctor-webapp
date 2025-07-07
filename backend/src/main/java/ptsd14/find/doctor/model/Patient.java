@@ -43,14 +43,14 @@ public class Patient {
     @Column(name = "date_of_birth", nullable = false)
     @NotNull(message = "Date of birth is required")
     @Past(message = "Date of birth must be in the past")
-    private LocalDate dateOfBirth;  // Use LocalDate instead of String
+    private LocalDate dateOfBirth;
 
     @Column(nullable = false)
     @NotBlank(message = "Address is required")
     private String address;
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore  // Prevents infinite loop in JSON serialization
+    @JsonIgnore 
     private List<Appointment> appointments;
 
     @Column(name = "created_at")
@@ -63,8 +63,6 @@ public class Patient {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
-
-    // Pre-update method to set updatedAt
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

@@ -1,6 +1,10 @@
 package ptsd14.find.doctor.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.dto.SpecializationDto;
 import ptsd14.find.doctor.exception.DuplicateResourceException;
@@ -8,9 +12,7 @@ import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.SpecializationMapper;
 import ptsd14.find.doctor.model.Specialization;
 import ptsd14.find.doctor.repository.SpecializationRepos;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,16 +21,24 @@ public class SpecializationService {
     private final SpecializationRepos specializationRepository;
     private final SpecializationMapper specializationMapper;
 
+    @Transactional(readOnly = true)
+    public Page<SpecializationDto> getAll(Pageable pageable, String search) {
+        Page<Specialization> specs;
+
+        if (search != null && !search.trim().isEmpty()) {
+            String trimmedSearch = search.trim();
+            specs = specializationRepository.findByNameContainingIgnoreCase(trimmedSearch, pageable);
+        } else {
+            specs = specializationRepository.findAll(pageable);
+        }
+
+        return specs.map(specializationMapper::toDto);
+    }
 
     public Optional<SpecializationDto> getById(Long id) {
         return specializationRepository.findById(id)
                 .map(specializationMapper::toDto);
         
-    }
-    public List<SpecializationDto> findAll() {
-        return specializationRepository.findAll().stream()
-                .map(specializationMapper::toDto)
-                .collect(Collectors.toList());
     }
 
     public SpecializationDto create(SpecializationDto dto) {

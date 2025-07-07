@@ -35,11 +35,13 @@ public class Payment {
     private String paymentMethod;
 
     @Column(name = "paid_at", nullable = false, updatable = false)
-    private LocalDateTime paidAt = LocalDateTime.now();  // Default to current time
+    private LocalDateTime paidAt = LocalDateTime.now(); 
 
     @OneToOne
-    @JoinColumn(name = "appointment_id", nullable = false, unique = true)  // Ensures 1:1
+    @JoinColumn(name = "appointment_id", nullable = false, unique = true)
     private Appointment appointment;
 
-    // Getters and setters
+    @Column(name = "stripe_payment_intent_id")
+    private String stripePaymentIntentId;
+
 }

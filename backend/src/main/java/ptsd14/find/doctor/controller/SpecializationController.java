@@ -1,12 +1,14 @@
 package ptsd14.find.doctor.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.dto.SpecializationDto;
 import ptsd14.find.doctor.service.SpecializationService;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,9 +21,19 @@ public class SpecializationController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<SpecializationDto>> getAllSpecializations() {
-        List<SpecializationDto> list = specializationService.findAll();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<Page<SpecializationDto>> getAll(
+        @RequestParam(required = false, defaultValue = "0") Integer page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search
+    ) {
+        int pageNumber = (page != null && page >= 0) ? page : 0;
+
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "name"));
+
+        // Pass both search and status to the service
+        Page<SpecializationDto> spcializationsPage = specializationService.getAll(pageable, search);
+
+        return ResponseEntity.ok(spcializationsPage);
     }
 
     @GetMapping("/{id}")

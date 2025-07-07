@@ -1,8 +1,10 @@
 package ptsd14.find.doctor.controller;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +19,22 @@ public class DoctorController {
 
     private final DoctorService doctorService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<DoctorDto>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<DoctorDto>> getAllDoctors(
+        @RequestParam(required = false, defaultValue = "0") Integer page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String search,
+        @RequestParam(required = false) String status
     ) {
-        return ResponseEntity.ok(doctorService.getAll(PageRequest.of(page, size)));
+        int pageNumber = (page != null && page >= 0) ? page : 0;
+
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "firstname"));
+
+        // Pass both search and status to the service
+        Page<DoctorDto> doctorsPage = doctorService.getAll(pageable, search, status);
+
+        return ResponseEntity.ok(doctorsPage);
     }
 
     @GetMapping("/{id}")

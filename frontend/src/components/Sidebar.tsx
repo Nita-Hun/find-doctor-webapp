@@ -15,6 +15,7 @@ import {
 const menuItems = [
   { label: 'Dashboards', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/dashboards' },
   { label: 'Doctors', icon: <UserCircleIcon className="h-5 w-5" />, href: '/admin/doctors' },
+  { label: 'Users', icon: <Cog6ToothIcon className="h-5 w-5" />, href: '/admin/users' },
   { label: 'Patients', icon: <UsersIcon className="h-5 w-5" />, href: '/admin/patients' },
   { label: 'Appointments', icon: <CalendarDaysIcon className="h-5 w-5" />, href: '/admin/appointments' },
   { label: 'Specializations', icon: <BriefcaseIcon className="h-5 w-5" />, href: '/admin/specializations' },
@@ -22,6 +23,7 @@ const menuItems = [
   { label: 'Feedbacks', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/feedbacks' },
   { label: 'Appointment Types', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/appointmentTypes' },
   { label: 'Payments', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/payments' },
+  { label: 'Payment History', icon: <ClipboardDocumentListIcon className="h-5 w-5" />, href: '/admin/paymentViews' },
   { label: 'Settings', icon: <Cog6ToothIcon className="h-5 w-5" />, href: '/admin/settings' },
 ];
 
