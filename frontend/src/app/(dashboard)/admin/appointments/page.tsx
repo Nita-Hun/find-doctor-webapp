@@ -254,7 +254,7 @@ export default function AppointmentsPage() {
                 {appointments.map((a) => (
                   <tr
                     key={a.id}
-                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-gray-200`}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-100`}
                   >
                     {/* Doctor - Combined ID and Name */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">

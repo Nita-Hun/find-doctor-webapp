@@ -11,6 +11,7 @@ import { UserDto } from '@/types/UserDto';
 import { PagedResponse } from '@/types/PagedResponse';
 import Image from 'next/image';
 import { FiSearch } from 'react-icons/fi';
+import UserThumbnail from '@/components/UserThumbnail';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserDto[]>([]);
@@ -274,7 +275,7 @@ export default function UsersPage() {
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-gray-200`}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-100`}
                   >
                     {/* ID */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
@@ -286,19 +287,7 @@ export default function UsersPage() {
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Photo</span>
                       <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-                        {user.profilePhotoUrl ? (
-                          <Image
-                            src={user.profilePhotoUrl}
-                            alt="Profile"
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-blue-600 font-semibold">
-                            {user.email.charAt(0).toUpperCase()}
-                          </span>
-                        )}
+                        <UserThumbnail user={user} />
                       </div>
                     </td>
 

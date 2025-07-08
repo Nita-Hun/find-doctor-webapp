@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from "@/lib/api-client";
 
 export interface UserProfile {
+  id: number;
+  email: string;
   role: "ADMIN" | "DOCTOR" | "PATIENT";
   profilePhotoUrl: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function useUserProfile() {
@@ -19,8 +23,13 @@ export function useUserProfile() {
     }
 
     setLoading(true);
+
     apiClient
-      .get<UserProfile>("/api/auth/me")
+      .get<UserProfile>("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ Pass token here
+        },
+      })
       .then((res) => setUser(res.data))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));

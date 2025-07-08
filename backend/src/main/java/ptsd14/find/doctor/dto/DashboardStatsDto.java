@@ -1,10 +1,10 @@
 package ptsd14.find.doctor.dto;
 
-
 import lombok.Data;
-
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -14,12 +14,12 @@ public class DashboardStatsDto {
     private long appointmentCount;
     private long specializationCount;
     private BigDecimal totalRevenue;
-    private List<DailyRevenue> revenueLast30Days;
-    private List<AppointmentSummary> upcomingAppointments;
+    private List<DailyRevenue> revenueLast30Days = new ArrayList<>();
+    private List<AppointmentSummary> upcomingAppointments = new ArrayList<>();
 
     @Data
     public static class DailyRevenue {
-        private LocalDateTime date;
+        private LocalDate date;
         private BigDecimal revenue;
     }
 
@@ -33,4 +33,3 @@ public class DashboardStatsDto {
         private LocalDateTime dateTime;
     }
 }
-

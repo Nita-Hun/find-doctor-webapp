@@ -111,7 +111,7 @@ public class StripeWebhookController {
             Payment payment = new Payment();
             payment.setAmount(BigDecimal.valueOf(paymentIntent.getAmount()).movePointLeft(2));
             payment.setStripePaymentIntentId(paymentIntent.getId()); 
-            payment.setPaymentStatus("COMPLETED");
+            payment.setPaymentStatus("PAID");
             payment.setPaymentMethod(paymentIntent.getPaymentMethod() != null ? paymentIntent.getPaymentMethod() : "unknown");
             payment.setPaidAt(LocalDateTime.now());
             payment.setAppointment(appointment);

@@ -1,20 +1,21 @@
-// import jwtDecode from "jwt-decode";
+import { jwtDecode } from 'jwt-decode'; // ✅ correct
 
-// interface JwtPayload {
-//   sub: string;
-//   role: string;
-//   [key: string]: any;
-// }
 
-// export function getRoleFromToken(token: string): string | null {
-//   if (!token) return null;
+interface JwtPayload {
+  sub: string;
+  role: string;
+  [key: string]: any;
+}
 
-//   try {
-//     const decoded = jwtDecode<JwtPayload>(token);
-//     return decoded.role || null;
-//   } catch (error) {
-//     console.error("Invalid token:", error);
-//     return null;
-//   }
-// }
+export function getRoleFromToken(token: string): string | null {
+  if (!token) return null;
+
+  try {
+    const decoded = jwtDecode<JwtPayload>(token);
+    return decoded.role || null;
+  } catch (error) {
+    console.error("Invalid token:", error);
+    return null;
+  }
+}
 

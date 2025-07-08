@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
-import { Specialization } from '@/types/specialization';
+import { Specialization } from '@/types/Specialization';
 
 interface SpecializationFormModalProps {
   specialization: Specialization | null;

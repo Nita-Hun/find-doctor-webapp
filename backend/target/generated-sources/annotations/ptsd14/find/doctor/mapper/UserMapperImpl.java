@@ -8,7 +8,7 @@ import ptsd14.find.doctor.model.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-07T15:48:50+0700",
+    date = "2025-07-08T18:17:13+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -22,9 +22,9 @@ public class UserMapperImpl implements UserMapper {
 
         UserDto userDto = new UserDto();
 
+        userDto.setProfilePhotoUrl( user.getProfilePhotoUrl() );
         userDto.setEmail( user.getEmail() );
         userDto.setId( user.getId() );
-        userDto.setProfilePhotoUrl( user.getProfilePhotoUrl() );
 
         userDto.setRole( user.getRole() != null ? user.getRole().name() : null );
         userDto.setCreatedAt( formatDateTime(user.getCreatedAt()) );
@@ -41,9 +41,9 @@ public class UserMapperImpl implements UserMapper {
 
         User user = new User();
 
+        user.setProfilePhotoUrl( dto.getProfilePhotoUrl() );
         user.setEmail( dto.getEmail() );
         user.setId( dto.getId() );
-        user.setProfilePhotoUrl( dto.getProfilePhotoUrl() );
 
         user.setRole( dto.getRole() != null ? Role.valueOf(dto.getRole()) : null );
 
@@ -56,8 +56,8 @@ public class UserMapperImpl implements UserMapper {
             return;
         }
 
-        user.setEmail( dto.getEmail() );
         user.setProfilePhotoUrl( dto.getProfilePhotoUrl() );
+        user.setEmail( dto.getEmail() );
         if ( dto.getRole() != null ) {
             user.setRole( Enum.valueOf( Role.class, dto.getRole() ) );
         }

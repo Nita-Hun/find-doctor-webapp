@@ -22,7 +22,6 @@ ptsd14/find/doctor/dto/LoginRequest.class
 ptsd14/find/doctor/model/User.class
 ptsd14/find/doctor/controller/StripeWebhookController.class
 ptsd14/find/doctor/mapper/PatientMapperImpl.class
-ptsd14/find/doctor/service/PaymentGateway.class
 ptsd14/find/doctor/repository/AppointmentTypeRepository.class
 ptsd14/find/doctor/controller/AuthController$1.class
 ptsd14/find/doctor/dto/PaymentDto.class
@@ -67,7 +66,6 @@ ptsd14/find/doctor/mapper/FeedbackMapper.class
 ptsd14/find/doctor/service/HospitalService.class
 ptsd14/find/doctor/controller/AppointmentTypeController.class
 ptsd14/find/doctor/mapper/PaymentMapperImpl.class
-ptsd14/find/doctor/service/DefaultPaymentGateway.class
 ptsd14/find/doctor/controller/FeedbackController.class
 ptsd14/find/doctor/config/OpenApiConfig.class
 ptsd14/find/doctor/controller/PatientController.class

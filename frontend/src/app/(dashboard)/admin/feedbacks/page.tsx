@@ -314,7 +314,7 @@ export default function FeedbackPage() {
                 {feedbacks.map((feedback) => (
                   <tr
                     key={feedback.id}
-                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-gray-200`}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-100`}
                   >
                     {/* ID */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">

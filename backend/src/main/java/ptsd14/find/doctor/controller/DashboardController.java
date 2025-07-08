@@ -1,16 +1,11 @@
 package ptsd14.find.doctor.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import ptsd14.find.doctor.dto.DashboardStatsDto;
 import ptsd14.find.doctor.repository.AppointmentRepository;
 import ptsd14.find.doctor.repository.DoctorRepository;
@@ -18,67 +13,63 @@ import ptsd14.find.doctor.repository.PatientRepository;
 import ptsd14.find.doctor.repository.SpecializationRepos;
 import ptsd14.find.doctor.service.DashboardService;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/api/dashboards")
+@RequiredArgsConstructor
 public class DashboardController {
 
-    @Autowired
-    private DoctorRepository doctorRepository;
-    @Autowired
-    private PatientRepository patientRepository;
-    @Autowired
-    private AppointmentRepository appointmentRepository;
-    @Autowired
-    private SpecializationRepos specializationRepository;
-    @Autowired
-    private DashboardService dashboardService;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final SpecializationRepos specializationRepository;
+    private final DashboardService dashboardService;
 
     @GetMapping("/counts")
     @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Long> getCounts() {
+        DashboardStatsDto stats = dashboardService.getDashboardStats();
         Map<String, Long> counts = new HashMap<>();
-        counts.put("doctors", doctorRepository.count());
-        counts.put("patients", patientRepository.count());
-        counts.put("appointments", appointmentRepository.count());
-        counts.put("specializations", specializationRepository.count());
+        counts.put("doctors", stats.getDoctorCount());
+        counts.put("patients", stats.getPatientCount());
+        counts.put("appointments", stats.getAppointmentCount());
+        counts.put("specializations", stats.getSpecializationCount());
         return counts;
     }
+
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ADMIN')")
     public List<Map<String, Object>> getRevenueData() {
-        List<Map<String, Object>> stats = new ArrayList<>();
-
-        // Example static data
-        stats.add(Map.of(
-            "month", "Jan",
-            "revenue", 5000
-        ));
-        stats.add(Map.of(
-            "month", "Feb",
-            "revenue", 6200
-        ));
-        stats.add(Map.of(
-            "month", "Mar",
-            "revenue", 5800
-        ));
-        stats.add(Map.of(
-            "month", "Apr",
-            "revenue", 7500
-        ));
-
-        return stats;
+        return dashboardService.getMonthlyRevenue();
     }
+
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
-    public DashboardStatsDto getDashboardStats() {
-        return dashboardService.getDashboardStats();
+    public ResponseEntity<DashboardStatsDto> getStats() {
+        DashboardStatsDto stats = dashboardService.getDashboardStats();
+        return ResponseEntity.ok(stats);
     }
-    @GetMapping("/upcoming")
+
+    @GetMapping("/appointments/upcoming")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<DashboardStatsDto.AppointmentSummary> getUpcomingAppointments() {
-            return dashboardService.getUpcomingAppointments();
+    public ResponseEntity<List<DashboardStatsDto.AppointmentSummary>> getUpcomingAppointments() {
+        List<DashboardStatsDto.AppointmentSummary> upcoming = dashboardService.getUpcomingAppointments();
+        return ResponseEntity.ok(upcoming);
+    }
+
+    @GetMapping("/appointments/weekly")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DashboardStatsDto.AppointmentSummary>> getWeeklyAppointments() {
+        List<DashboardStatsDto.AppointmentSummary> weeklyAppointments = dashboardService.getWeeklyAppointments();
+        return ResponseEntity.ok(weeklyAppointments);
+    }
+
+    @GetMapping("/activity/recent")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Map<String, Object>> getRecentActivities() {
+        return dashboardService.getRecentActivities();
     }
 }
-
-

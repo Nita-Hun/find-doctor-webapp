@@ -1,7 +1,11 @@
 package ptsd14.find.doctor.controller;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import org.springframework.security.core.AuthenticationException;
 
 import jakarta.validation.Valid;
@@ -19,10 +25,12 @@ import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.dto.LoginRequest;
 import ptsd14.find.doctor.dto.UserDto;
 import ptsd14.find.doctor.dto.RegisterRequest;
+import ptsd14.find.doctor.dto.UpdateProfileRequest;
 import ptsd14.find.doctor.jwt.JwtUtil;
 import ptsd14.find.doctor.model.Role;
 import ptsd14.find.doctor.model.User;
 import ptsd14.find.doctor.repository.UserRepo;
+import ptsd14.find.doctor.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,6 +42,7 @@ public class AuthController {
     private final UserRepo userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
@@ -143,4 +152,82 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/upload-profile-photo")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> uploadProfilePhoto(@RequestParam("file") MultipartFile file) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+        if (!file.getContentType().startsWith("image/")) {
+            return ResponseEntity.badRequest().body("Invalid file type");
+        }
+        if (file.getSize() > 2 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body("File too large (max 2MB)");
+        }
+
+        try {
+            String basePath = System.getProperty("user.dir");
+            Path uploadDir = Paths.get(basePath, "uploads", "profile-photos");
+            Files.createDirectories(uploadDir);
+
+            // Delete old photo if exists and is not the default photo
+            String oldPhotoUrl = user.getProfilePhotoUrl();
+            if (oldPhotoUrl != null && !oldPhotoUrl.equals("/uploads/default-profile.png")) {
+                Path oldPhotoPath = Paths.get(basePath, oldPhotoUrl.replaceFirst("/", ""));
+                try {
+                    Files.deleteIfExists(oldPhotoPath);
+                } catch (Exception ex) {
+                    // Log warning, but do not fail the whole request
+                    System.err.println("Failed to delete old profile photo: " + ex.getMessage());
+                }
+            }
+
+            // Save new photo
+            String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
+            Path filepath = uploadDir.resolve(filename);
+            file.transferTo(filepath.toFile());
+
+            // Update user's profilePhotoUrl
+            user.setProfilePhotoUrl("/uploads/profile-photos/" + filename);
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("profilePhotoUrl", user.getProfilePhotoUrl()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error uploading file: " + e.getMessage());
+        }
+    }
+
+
+    @PutMapping("/update-profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oldEmail = auth.getName();
+
+        UserDto updatedUser = userService.updateProfile(oldEmail, request);
+
+        // Generate new token with updated email/role if changed
+        String newToken = jwtUtil.generateToken(updatedUser.getEmail(), updatedUser.getRole());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Profile updated");
+        response.put("user", updatedUser);
+        response.put("accessToken", newToken);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
 }

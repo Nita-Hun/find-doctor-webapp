@@ -78,15 +78,6 @@ public class DoctorService {
                 .collect(Collectors.toList());
     }
 
-    // Return all doctors sorted by average rating descending
-    public List<DoctorDto> getTopRatedDoctors() {
-        return doctorRepository.findAll().stream()
-                .map(doctorMapper::toDto)
-                .sorted(Comparator.comparingDouble(DoctorDto::getAverageRating).reversed())
-                .collect(Collectors.toList());
-    }
-
-
     public DoctorDto create(DoctorDto dto) {
         Doctor doctor = doctorMapper.toEntity(dto);
 

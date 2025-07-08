@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ptsd14.find.doctor.dto.CreateUserRequest;
+import ptsd14.find.doctor.dto.UpdateProfileRequest;
 import ptsd14.find.doctor.dto.UpdateUserRequest;
 import ptsd14.find.doctor.dto.UserDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
@@ -16,6 +18,9 @@ import ptsd14.find.doctor.model.Role;
 import ptsd14.find.doctor.model.User;
 import ptsd14.find.doctor.repository.UserRepo;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 @Service
@@ -75,26 +80,73 @@ public class UserService {
         return userMapper.toDto(saved);
     }
 
+    private void deleteProfilePhotoFileIfExists(String profilePhotoUrl) {
+        if (profilePhotoUrl == null || profilePhotoUrl.isBlank() || profilePhotoUrl.equals("/uploads/default-profile.png")) {
+            return; // Nothing to delete or default image, so skip
+        }
+
+        String basePath = System.getProperty("user.dir");
+        Path photoPath = Paths.get(basePath, profilePhotoUrl.replaceFirst("/", ""));
+
+        try {
+            Files.deleteIfExists(photoPath);
+        } catch (Exception ex) {
+            System.err.println("Failed to delete profile photo file: " + ex.getMessage());
+            // optionally log with logger instead of System.err
+        }
+    }
+
     public UserDto updateUser(Long id, UpdateUserRequest req) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setEmail(req.getEmail());
         user.setRole(Role.valueOf(req.getRole()));
-        user.setProfilePhotoUrl(req.getProfilePhotoUrl());
+
+        if (req.getProfilePhotoUrl() != null && !req.getProfilePhotoUrl().isBlank()) {
+            String oldPhotoUrl = user.getProfilePhotoUrl();
+            if (!oldPhotoUrl.equals(req.getProfilePhotoUrl())) {
+                deleteProfilePhotoFileIfExists(oldPhotoUrl);
+                user.setProfilePhotoUrl(req.getProfilePhotoUrl());
+            }
+        }
 
         if (req.getPassword() != null && !req.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(req.getPassword()));
         }
+
         User updated = userRepository.save(user);
         return userMapper.toDto(updated);
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        deleteProfilePhotoFileIfExists(user.getProfilePhotoUrl());
+
         userRepository.deleteById(id);
     }
+
+    //Update Profile##############################################################
+    @Transactional
+    public UserDto updateProfile(String currentEmail, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(currentEmail)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        User saved = userRepository.save(user);
+
+        return userMapper.toDto(saved);
+    }
+
+
 }

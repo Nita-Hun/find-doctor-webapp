@@ -7,7 +7,7 @@ import SpecializationFormModal from '@/components/SpecializationFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { Specialization } from '@/types/specialization';
+import { Specialization } from '@/types/Specialization';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
 
@@ -231,7 +231,7 @@ export default function SpecializationsPage() {
                 {specializations.map((spec) => (
                   <tr
                     key={spec.id}
-                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-gray-200`}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-100`}
                   >
                     {/* ID */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">

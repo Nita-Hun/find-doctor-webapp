@@ -15,7 +15,6 @@ import ptsd14.find.doctor.model.Appointment;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    List<Appointment> findTop5ByDateTimeAfterOrderByDateTimeAsc(LocalDateTime now);
     Streamable<AppointmentDto> findByDateTimeAfterOrderByDateTimeAsc(LocalDateTime now);
     List<Appointment> findByPaymentIsNull();
     
@@ -29,5 +28,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Page<Appointment> findByDoctorNameContainingIgnoreCase(@Param("search") String search, Pageable pageable);
     Page<Appointment> findByPatientFirstnameContainingIgnoreCaseOrPatientLastnameContainingIgnoreCase(String search,
              String search2, Pageable pageable);
-    
+
+
+    // Dashboard 
+    List<Appointment> findByDateTimeBetweenOrderByDateTimeAsc(LocalDateTime startDateTime, LocalDateTime endDateTime);
+    List<Appointment> findTop5ByOrderByDateTimeDesc();
+
+    @Query("""
+    SELECT a
+    FROM Appointment a
+    JOIN FETCH a.patient
+    JOIN FETCH a.doctor
+    JOIN FETCH a.appointmentType
+    WHERE a.dateTime > :now
+    ORDER BY a.dateTime ASC
+    """)
+    List<Appointment> findTop5Upcoming(@Param("now") LocalDateTime now);
+
+        
 }

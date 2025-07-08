@@ -22,5 +22,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
             String trimmedStatus, String trimmedSearch, String trimmedStatus2, String trimmedSearch2,
             Pageable pageable);
     Page<Doctor> findByStatusIgnoreCase(String trim, Pageable pageable);
+
 }
 
