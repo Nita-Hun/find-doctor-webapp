@@ -16,7 +16,11 @@ public interface AppointmentMapper {
     @Mapping(target = "patientName", expression = "java(appointment.getPatient() != null ? appointment.getPatient().getFirstname() + \" \" + appointment.getPatient().getLastname() : null)")
     @Mapping(source = "appointmentType.id", target = "appointmentTypeId")
     @Mapping(source = "appointmentType.name", target = "appointmentTypeName")
-    @Mapping(source = "appointmentType.price", target = "amount") // Added amount mapping
+    @Mapping(source = "appointmentType.price", target = "amount")
+    @Mapping(source = "payment.paymentStatus", target = "paymentStatus")
+    @Mapping(source = "status", target = "status")
+     @Mapping(target = "doctorHospitalName", expression = "java(appointment.getDoctor() != null && appointment.getDoctor().getHospital() != null ? appointment.getDoctor().getHospital().getName() : null)")
+    @Mapping(target = "doctorHospitalPhone", expression = "java(appointment.getDoctor() != null && appointment.getDoctor().getHospital() != null ? appointment.getDoctor().getHospital().getPhone() : null)")
     AppointmentDto toDto(Appointment appointment);
     
 
@@ -29,6 +33,7 @@ public interface AppointmentMapper {
     @Mapping(target = "payment", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(source = "status", target = "status") // <-- NEW
     Appointment toEntity(AppointmentDto dto);
 
     // UPDATE ENTITY
@@ -40,6 +45,7 @@ public interface AppointmentMapper {
     @Mapping(target = "payment", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(source = "status", target = "status") // <-- NEW
     void updateFromDto(AppointmentDto dto, @MappingTarget Appointment entity);
 
     @AfterMapping

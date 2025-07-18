@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ptsd14.find.doctor.security.JwtAuthenticationFilter;
 import ptsd14.find.doctor.service.CustomUserDetailsService;
@@ -30,7 +31,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new org.springframework.web.cors.CorsConfiguration();
                 corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:3000")); // frontend URL
-                corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                 corsConfig.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept"));
                 corsConfig.setAllowCredentials(true);
                 return corsConfig;
@@ -43,15 +44,37 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/api/payments/unpaid-appointments/**").permitAll()
                 .requestMatchers("/api/payments/create-payment-intent/**").permitAll()
+                .requestMatchers("/api/appointment-types/public/**", "/api/doctors/**").permitAll()
+                .requestMatchers("/api/payments/pay-cash/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/api/appointments/**", "/api/doctors/**", "/api/hospitals/**", "/api/patients/**", "/api/specializations/**", "/api/users/**").hasRole("ADMIN")
+                .requestMatchers("/api/appointments/doctor").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.PATCH, "/api/appointments/*/confirm").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.PATCH, "/api/appointments/*/cancel").hasAnyRole("DOCTOR", "PATIENT")
+                .requestMatchers(HttpMethod.PATCH, "/api/appointments/*/complete").hasRole("DOCTOR")
+                .requestMatchers("/api/appointments/doctor", "/api/doctor/dashboard").hasRole("DOCTOR")
+                .requestMatchers("/api/appointments/patient").hasRole("PATIENT")
+                .requestMatchers("/api/patients/**","/api/appointments/**", "/api/appointment-types/**").hasAnyRole("PATIENT", "ADMIN")
+                .requestMatchers("/api/hospitals/**", "/api/specializations/**", "/api/users/**", "/api/payments/**","/api/dashboards/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .userDetailsService(userDetailsService)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler(customAccessDeniedHandler())
+            );
         return http.build();
+    }
+
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(403);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                "{\"error\": \"You do not have permission to perform this action.\"}"
+            );
+        };
     }
 
     @Bean

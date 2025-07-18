@@ -40,10 +40,8 @@ public class Appointment {
     private LocalDateTime dateTime;
 
     @Column(nullable = false)
-    @NotBlank(message = "Status is required")
+    @NotBlank(message = "Note is required")
     private String note;
-
-    private String attachment;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -62,6 +60,10 @@ public class Appointment {
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Feedback> feedbacks;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentStatus status = AppointmentStatus.PENDING;
 
     @PrePersist
     protected void onCreate() {

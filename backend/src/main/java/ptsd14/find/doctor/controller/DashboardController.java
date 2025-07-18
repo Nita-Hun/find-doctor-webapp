@@ -7,10 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ptsd14.find.doctor.dto.DashboardStatsDto;
-import ptsd14.find.doctor.repository.AppointmentRepository;
-import ptsd14.find.doctor.repository.DoctorRepository;
-import ptsd14.find.doctor.repository.PatientRepository;
-import ptsd14.find.doctor.repository.SpecializationRepos;
 import ptsd14.find.doctor.service.DashboardService;
 
 import java.util.HashMap;
@@ -22,10 +18,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DashboardController {
 
-    private final DoctorRepository doctorRepository;
-    private final PatientRepository patientRepository;
-    private final AppointmentRepository appointmentRepository;
-    private final SpecializationRepos specializationRepository;
     private final DashboardService dashboardService;
 
     @GetMapping("/counts")

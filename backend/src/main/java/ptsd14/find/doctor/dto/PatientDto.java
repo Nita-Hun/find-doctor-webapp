@@ -13,6 +13,8 @@ public class PatientDto {
     private String gender;
     private LocalDate dateOfBirth;
     private String address;
+    private Long userId;
+    private String userEmail;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface PaginationProps {
   currentPage: number;
@@ -7,15 +7,9 @@ interface PaginationProps {
 }
 
 export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
-  const [inputPage, setInputPage] = useState<string>('');
+  const [inputPage, setInputPage] = useState<string>("");
 
   if (totalPages === 0) return null;
-
-  // Generate page numbers array
-  const pages = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pages.push(i);
-  }
 
   const handleGoClick = () => {
     const pageNumber = Number(inputPage);
@@ -26,7 +20,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
     if (pageNumber !== currentPage) {
       onPageChange(pageNumber);
     }
-    setInputPage(''); // clear input after valid go
+    setInputPage("");
   };
 
   return (
@@ -39,37 +33,29 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
         Prev
       </button>
 
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded ${
-            page === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200'
-          }`}
-        >
-          {page}
-        </button>
-      ))}
+      <span className="text-sm">
+        Page {currentPage} of {totalPages}
+      </span>
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages || totalPages === 0}
+        disabled={currentPage >= totalPages}
         className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50 text-sm"
       >
         Next
       </button>
 
-      {/* Input + Go button */}
+      {/* Optional input + Go */}
       <div className="flex items-center gap-2 ml-4 text-sm">
         <input
           type="number"
           min={1}
           max={totalPages}
-          placeholder="1"
+          placeholder="Page #"
           value={inputPage}
           onChange={(e) => setInputPage(e.target.value.trim())}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
               e.preventDefault();
               handleGoClick();
             }
@@ -83,7 +69,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
           Go
         </button>
       </div>
-
     </nav>
   );
 }

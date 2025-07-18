@@ -1,81 +1,383 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { apiClient } from '@/lib/api-client';
-import Link from 'next/link';
-import toast from 'react-hot-toast';
-
-interface RoleMetadataDto {
-  role: string;
-  description: string;
-  status: boolean;
-  createdAt: string;
-}
+import { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api-client";
+import toast from "react-hot-toast";
+import RoleFormModal from "@/components/RoleFormModal";
+import ErrorState from "@/components/ErrorState";
+import { Pencil, Trash2 } from "lucide-react";
+import Pagination from "@/components/Pagination";
+import { Role } from "@/types/Role";
+import { PagedResponse } from "@/types/PagedResponse";
+import { FiSearch } from "react-icons/fi";
 
 export default function RolesPage() {
-  const [roles, setRoles] = useState<RoleMetadataDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "INACTIVE", label: "Inactive" },
+  ];
+
+  const statusColors: Record<string, string> = {
+    ACTIVE: "bg-green-100 text-green-800",
+    INACTIVE: "bg-gray-100 text-gray-800",
+  };
 
   const fetchRoles = async () => {
-    setLoading(true);
+    setIsLoading(true);
+    setError(null);
     try {
-      const res = await apiClient.get<RoleMetadataDto[]>('/api/roles');
-      setRoles(res.data);
-    } catch (error: any) {
-      toast.error(error.response?.data || error.message);
+      const response = await apiClient.get<PagedResponse<Role>>("/api/roles", {
+        params: {
+          page: currentPage - 1,
+          size: pageSize,
+          search: searchTerm || undefined,
+          status: statusFilter || undefined,
+        },
+      });
+
+      const pagedData = response.data;
+
+      if (pagedData.content.length === 0 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+        return;
+      }
+
+      setRoles(pagedData.content);
+      setTotalPages(pagedData.page.totalPages);
+      setTotalItems(pagedData.page.totalElements);
+    } catch (err: any) {
+      console.error("Error fetching roles:", err);
+      setError("Failed to load roles. Please try again.");
+      toast.error("Failed to fetch roles");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchRoles();
+  }, [refreshKey, currentPage, searchTerm, pageSize, statusFilter]);
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Are you sure you want to delete this role?")) {
+      try {
+        await apiClient.delete(`/api/roles/${id}`);
+        toast.success("Role deleted successfully");
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        console.error("Error deleting role:", error);
+        toast.error("Failed to delete role");
+      }
+    }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleSuccess = () => {
+    setRefreshKey((prev) => prev + 1);
+    setShowModal(false);
+    setSelectedRole(null);
+  };
+
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const buildInitialData = (role: Role) => {
+    const permissionsMap: Record<string, { view: boolean; create: boolean; edit: boolean; delete: boolean, confirm: boolean, completed: boolean, canceled: boolean }> = {};
+
+    ENTITIES.forEach((entity) => {
+      permissionsMap[entity] = { view: false, create: false, edit: false, delete: false, confirm: false, completed: false, canceled: false };
+    });
+
+    if (role.permissions && Array.isArray(role.permissions)) {
+      role.permissions.forEach((perm) => {
+        const [entity, action] = perm.split(":");
+        if (entity && action && permissionsMap[entity]) {
+          permissionsMap[entity][action as keyof typeof permissionsMap[typeof entity]] = true;
+        }
+      });
+    }
+
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description || "",
+      status: role.status,
+      permissions: permissionsMap,
+    };
+  };
+
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-semibold mb-4">Role Configuration</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-2">Role</th>
-              <th className="text-left p-2">Description</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Created At</th>
-              <th className="text-left p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {roles.map((r) => (
-              <tr key={r.role} className="border-t">
-                <td className="p-2">{r.role}</td>
-                <td className="p-2">{r.description}</td>
-                <td className="p-2">
-                  <span
-                    className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      r.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Role Management</h1>
+        <button
+          onClick={() => {
+            setSelectedRole(null);
+            setShowModal(true);
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors text-sm"
+        >
+          + Add New Role
+        </button>
+      </div>
+
+      {/* Search and filter bar */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow text-sm">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search roles..."
+              className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-gray-600 text-sm whitespace-nowrap">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <span className="text-gray-600 text-sm whitespace-nowrap">Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
+              >
+                {[5, 10, 20, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={() => setRefreshKey((prev) => prev + 1)}
+        />
+      )}
+
+      {/* Empty state */}
+      {!isLoading && !error && roles.length === 0 && (
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            />
+          </svg>
+          <h3 className="mt-2 text-lg font-medium text-gray-900">
+            {searchTerm || statusFilter ? 'No matching roles found' : 'No roles available'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchTerm || statusFilter ? 'Try adjusting your search/filters' : 'Get started by adding a new role'}
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('');
+                setSelectedRole(null);
+                setShowModal(true);
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-400 focus:outline-none"
+            >
+              <svg
+                className="-ml-1 mr-2 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add Role
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Roles table */}
+      {!isLoading && !error && roles.length > 0 && (
+        <div className="bg-white shadow rounded-lg overflow-hidden flex flex-col h-[500px]">
+          <div className="flex-1 overflow-y-auto overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-blue-600 hidden md:table-header-group">
+                <tr className="transition-colors duration-150">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Updated</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-200 text-sm">
+                {roles.map((role) => (
+                  <tr
+                    key={role.id}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-50`}
                   >
-                    {r.status ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="p-2">{new Date(r.createdAt).toLocaleString()}</td>
-                <td className="p-2">
-                  <Link
-                    href={`/admin/roles/${r.role}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    {/* ID */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">ID</span>
+                      <span className="text-gray-800">#{role.id}</span>
+                    </td>
+                    
+                    {/* Name */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Name</span>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                          <span className="text-blue-600 font-semibold">
+                            {role.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-gray-800 font-medium">{role.name}</span>
+                      </div>
+                    </td>
+
+                    {/* Description */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Description</span>
+                      <span className="text-gray-800">{role.description || "N/A"}</span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Status</span>
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[role.status] || "bg-gray-100 text-gray-800"}`}
+                      >
+                        {role.status}
+                      </span>
+                    </td>
+
+                    {/* Updated */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Updated</span>
+                      <span>{formatDate(role.updatedAt)}</span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="flex space-x-2 justify-end gap-2 md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <button
+                        onClick={() => {
+                          setSelectedRole(role);
+                          setShowModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(role.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <RoleFormModal
+          initialData={selectedRole ? buildInitialData(selectedRole) : undefined}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleSuccess}
+        />
       )}
     </div>
   );
 }
+
+const ENTITIES = ["DOCTOR", "PATIENT", "APPOINTMENT", "ROLE", "USER", "SPECIALIZATION", "DASHBOARD"];

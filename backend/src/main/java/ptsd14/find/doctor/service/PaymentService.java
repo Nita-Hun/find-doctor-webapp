@@ -143,5 +143,21 @@ public class PaymentService {
     }
 }
 
+    @Transactional
+    public void markPaidCash(Long appointmentId, BigDecimal amount) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        Payment payment = new Payment();
+        payment.setAppointment(appointment);
+        payment.setAmount(amount);
+        payment.setPaymentMethod("CASH");
+        payment.setPaymentStatus("PAID");
+        payment.setPaidAt(LocalDateTime.now());
+
+        paymentRepository.save(payment);
+    }
+
+
 
 }

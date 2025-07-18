@@ -29,7 +29,6 @@ public class SpecializationController {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
         var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "name"));
-
         // Pass both search and status to the service
         Page<SpecializationDto> spcializationsPage = specializationService.getAll(pageable, search);
 

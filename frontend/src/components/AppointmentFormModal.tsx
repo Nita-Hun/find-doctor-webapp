@@ -1,52 +1,108 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { apiClient } from '@/lib/api-client';
-import { Appointment, SelectOption, AppointmentFormModalProps } from '@/types/Appointment';
-import { FiX } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { apiClient } from "@/lib/api-client";
+import { AppointmentFormModalProps, AppointmentTypeOption, SelectOption } from "@/types/Appointment";
+import { FiX } from "react-icons/fi";
+import { useUserRole } from "@/hooks/useUserRole";
 
-export default function AppointmentFormModal({ appointment, onClose, onSuccess }: AppointmentFormModalProps) {
-  // Controlled state for the form fields, initialized from appointment or defaults
+
+export default function AppointmentFormModal({
+  appointment,
+  onClose,
+  onSuccess,
+}: AppointmentFormModalProps) {
+  const role = useUserRole();
+
+  // Controlled state for the form fields
   const [doctorId, setDoctorId] = useState<number>(appointment?.doctorId ?? 0);
   const [patientId, setPatientId] = useState<number>(appointment?.patientId ?? 0);
-  const [appointmentTypeId, setAppointmentTypeId] = useState<number>(appointment?.appointmentTypeId ?? 0);
-  const [dateTime, setDateTime] = useState<string>(appointment?.dateTime ?? '');
-  const [note, setNote] = useState<string>(appointment?.note ?? '');
-  const [attachment, setAttachment] = useState<File | null>(null);
-
+  const [appointmentTypeId, setAppointmentTypeId] = useState<number>(
+    appointment?.appointmentTypeId ?? 0
+  );
+  const [dateTime, setDateTime] = useState<string>(appointment?.dateTime ?? "");
+  const [note, setNote] = useState<string>(appointment?.note ?? "");
 
   // Dropdown options
   const [doctors, setDoctors] = useState<SelectOption[]>([]);
   const [patients, setPatients] = useState<SelectOption[]>([]);
-  const [appointmentTypes, setAppointmentTypes] = useState<SelectOption[]>([]);
+  const [appointmentTypes, setAppointmentTypes] = useState<AppointmentTypeOption[]>([]);
+
 
   const [loading, setLoading] = useState(false);
+
+  // Reset form fields when appointment prop changes (including formatting datetime-local)
+  useEffect(() => {
+    setDoctorId(appointment?.doctorId ?? 0);
+    setPatientId(appointment?.patientId ?? 0);
+    setAppointmentTypeId(appointment?.appointmentTypeId ?? 0);
+
+    if (appointment?.dateTime) {
+      const dt = new Date(appointment.dateTime);
+      // Convert to local datetime string compatible with input type="datetime-local"
+      // slice(0,16) cuts "YYYY-MM-DDTHH:mm"
+      const isoLocal = dt.toISOString().slice(0, 16);
+      setDateTime(isoLocal);
+    } else {
+      setDateTime("");
+    }
+
+    setNote(appointment?.note ?? "");
+  }, [appointment]);
 
   useEffect(() => {
     async function fetchDropdownData() {
       try {
         const [doctorsRes, patientsRes, typesRes] = await Promise.all([
-          apiClient.get('/api/doctors'),
-          apiClient.get('/api/patients'),
-          apiClient.get('/api/appointment-types'),
+          apiClient.get("/api/doctors", {
+            params: {
+              page: 0,
+              size: 1000
+            }
+          }),
+          apiClient.get("/api/patients", {
+            params: {
+              page: 0,
+              size: 1000
+            }
+          }),
+          apiClient.get("/api/appointment-types"),
         ]);
 
-        // Normalize and sort by full name (A-Z)
         const normalizeOptions = (data: any[], nameKeys: [string, string]) =>
           data
-            .map(d => ({ id: d.id, name: `${d[nameKeys[0]]} ${d[nameKeys[1]]}`.trim() }))
+            .map((d) => ({
+              id: d.id,
+              name: `${d[nameKeys[0]]} ${d[nameKeys[1]]}`.trim(),
+            }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
-        setDoctors(normalizeOptions(doctorsRes.data.content ?? doctorsRes.data, ['firstname', 'lastname']));
-        setPatients(normalizeOptions(patientsRes.data.content ?? patientsRes.data, ['firstname', 'lastname']));
+        setDoctors(
+          normalizeOptions(doctorsRes.data.content ?? doctorsRes.data, [
+            "firstname",
+            "lastname",
+          ])
+        );
+        setPatients(
+          normalizeOptions(patientsRes.data.content ?? patientsRes.data, [
+            "firstname",
+            "lastname",
+          ])
+        );
         setAppointmentTypes(
           (typesRes.data.content ?? typesRes.data)
-            .map((t: any) => ({ id: t.id, name: t.name }))
+            .map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              price: t.price,
+              duration: t.duration,
+            }))
             .sort((a: any, b: any) => a.name.localeCompare(b.name))
         );
+
       } catch (error) {
-        toast.error('Failed to load form data');
+        toast.error("Failed to load form data");
       }
     }
 
@@ -57,7 +113,7 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
     e.preventDefault();
 
     if (!doctorId || !patientId || !appointmentTypeId || !dateTime) {
-      toast.error('Please fill all required fields');
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -65,47 +121,65 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
 
     try {
       const formData = new FormData();
-      formData.append('doctorId', doctorId.toString());
-      formData.append('patientId', patientId.toString());
-      formData.append('appointmentTypeId', appointmentTypeId.toString());
-      formData.append('dateTime', dateTime);
-      formData.append('note', note);
-      if (attachment) formData.append('attachment', attachment);
+      formData.append("doctorId", doctorId.toString());
+      formData.append("patientId", patientId.toString());
+      formData.append("appointmentTypeId", appointmentTypeId.toString());
+      formData.append("dateTime", dateTime);
+      formData.append("note", note);
 
       if (appointment?.id) {
         await apiClient.put(`/api/appointments/${appointment.id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success('Appointment updated successfully');
+        toast.success("Appointment updated successfully");
       } else {
-        await apiClient.post('/api/appointments', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+        await apiClient.post("/api/appointments", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success('Appointment created successfully');
+        toast.success("Appointment created successfully");
       }
       onSuccess();
     } catch (error) {
-      toast.error('Failed to save appointment');
+      toast.error("Failed to save appointment");
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ If not admin, block access
+  if (role !== "ADMIN") {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
+          <h2 className="text-lg font-semibold mb-4">Unauthorized</h2>
+          <p className="text-sm text-gray-600">
+            You do not have permission to create or edit appointments.
+          </p>
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
-            {/* Modified header section to match first modal */}
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h2 className="text-xl font-semibold">
-                {appointment ? 'Edit Appointment' : 'Add New Appointment'}
-              </h2>
-              <button 
-                onClick={onClose} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FiX size={24} />
-              </button>
+      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+        <div className="flex justify-between items-center border-b pb-4 mb-4">
+          <h2 className="text-xl font-semibold">
+            {appointment ? "Edit Appointment" : "Add New Appointment"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FiX size={24} />
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 text-sm" noValidate>
           {/* Doctor */}
@@ -160,21 +234,22 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
               Appointment Type <span className="text-red-600">*</span>
             </label>
             <select
-              id="appointmentType"
-              value={appointmentTypeId}
-              onChange={(e) => setAppointmentTypeId(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            >
-              <option value={0} disabled>
-                Select type
-              </option>
-              {appointmentTypes.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
+                id="appointmentType"
+                value={appointmentTypeId}
+                onChange={(e) => setAppointmentTypeId(Number(e.target.value))}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              >
+                <option value={0} disabled>
+                  Select type
                 </option>
-              ))}
-            </select>
+                {appointmentTypes.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {`${t.name} - $${t.price} - ${t.duration} mins`}
+                  </option>
+                ))}
+              </select>
+
           </div>
 
           {/* Date & Time */}
@@ -186,6 +261,7 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
               id="dateTime"
               type="datetime-local"
               value={dateTime}
+              min={new Date().toISOString().slice(0, 16)}
               onChange={(e) => setDateTime(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
@@ -195,7 +271,7 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
           {/* Note */}
           <div>
             <label htmlFor="note" className="block font-medium mb-1">
-              Note <span className="text-red-600">*</span>
+              Note
             </label>
             <textarea
               id="note"
@@ -204,23 +280,7 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
               rows={3}
               className="w-full border border-gray-300 rounded px-3 py-2"
               placeholder="Additional notes..."
-            />
-          </div>
-
-          {/* Attachment */}
-          <div>
-            <label htmlFor="attachment" className="block font-medium mb-1">
-              Attachment
-            </label>
-            <input
-              id="attachment"
-              type="file"
-              onChange={(e) => {
-                const files = e.target.files;
-                setAttachment(files && files.length > 0 ? files[0] : null);
-              }}
-              className="w-full"
-              accept="image/*,.pdf,.doc,.docx"
+              required
             />
           </div>
 
@@ -239,7 +299,7 @@ export default function AppointmentFormModal({ appointment, onClose, onSuccess }
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              {loading ? 'Saving...' : 'Create'}
+              {loading ? "Saving..." : appointment ? "Update" : "Create"}
             </button>
           </div>
         </form>

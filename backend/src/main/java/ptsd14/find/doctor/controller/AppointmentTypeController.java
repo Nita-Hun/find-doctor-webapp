@@ -9,7 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ptsd14.find.doctor.dto.AppointmentTypeDto;
 import ptsd14.find.doctor.service.AppointmentTypeService;
-
 import java.util.Map;
 
 @RestController
@@ -19,8 +18,12 @@ public class AppointmentTypeController {
 
     private final AppointmentTypeService appointmentTypeService;
 
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    /**
+     * ADMIN: List all appointment types (with optional search).
+     * PATIENT: List all appointment types (drop down in form book appointment).
+     */
+    @GetMapping()
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
     public ResponseEntity<Page<AppointmentTypeDto>> getAllTypes(
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
@@ -34,6 +37,9 @@ public class AppointmentTypeController {
         return ResponseEntity.ok(appointmentTypesPage);
     }
 
+    /**
+     * ADMIN: Get a single appointment type by ID.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AppointmentTypeDto> getById(@PathVariable Long id) {
@@ -42,6 +48,9 @@ public class AppointmentTypeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * ADMIN: check Unique appointment type name.
+     */
     @GetMapping("/check-name")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Boolean>> checkNameUnique(
@@ -52,13 +61,18 @@ public class AppointmentTypeController {
         return ResponseEntity.ok(Map.of("isUnique", isUnique));
     }
 
+    /**
+     * ADMIN: Create a new appointment type.
+     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AppointmentTypeDto> create(@RequestBody AppointmentTypeDto dto) {
         AppointmentTypeDto created = appointmentTypeService.create(dto);
         return ResponseEntity.ok(created);
     }
-
+    /**
+     * ADMIN: Update appointment type.
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AppointmentTypeDto> update(@PathVariable Long id, @RequestBody AppointmentTypeDto dto) {
@@ -66,10 +80,14 @@ public class AppointmentTypeController {
         return ResponseEntity.ok(updated);
     }
 
+    /**
+     * ADMIN: Delete a new appointment type.
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         appointmentTypeService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
 }

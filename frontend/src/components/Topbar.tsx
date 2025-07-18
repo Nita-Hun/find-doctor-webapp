@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useUserProfile } from "@/hooks/userProfile";
 import { useRef, useState, useEffect } from "react";
-import { Menu } from "@headlessui/react";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { Menu, Transition } from "@headlessui/react";
+import { ChevronDownIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, UserIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,6 @@ export default function Topbar() {
   const [cacheBuster, setCacheBuster] = useState("");
   const router = useRouter();
 
-  // Refresh cache when the component mounts or user updates
   useEffect(() => {
     setCacheBuster(`?t=${Date.now()}`);
   }, [user]);
@@ -66,8 +65,6 @@ export default function Topbar() {
       );
 
       toast.success("Profile photo updated");
-
-      // Refresh profile and force reload of image
       await refetch();
       setCacheBuster(`?t=${Date.now()}`);
     } catch (error: any) {
@@ -84,15 +81,17 @@ export default function Topbar() {
   };
 
   const BACKEND_URL = "http://localhost:8080";
-
-  // Make sure to restart `npm run dev` if you change next.config.js remotePatterns
   const photoSrc =
     user && user.profilePhotoUrl
       ? `${BACKEND_URL}${user.profilePhotoUrl}${cacheBuster}`
-    : "/assets/images/default-admin.png";
+      : "/assets/images/default-admin.png";
 
   return (
-    <div className="bg-white shadow-sm px-6 py-4 flex justify-end items-center">
+    <div className="bg-white border-b border-gray-100 px-6 py-3 flex justify-between items-center sticky top-0 z-10">
+      <div className="flex items-center">
+        {/* You can add a logo or app name here if needed */}
+      </div>
+
       <input
         ref={inputFileRef}
         type="file"
@@ -102,113 +101,83 @@ export default function Topbar() {
       />
 
       {loading ? (
-        <div className="text-sm text-gray-500">Loading...</div>
+        <div className="animate-pulse flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-full bg-gray-200"></div>
+          <div className="h-4 w-24 rounded bg-gray-200"></div>
+        </div>
       ) : (
-        <Menu as="div" className="relative inline-block text-left">
-          <div>
-            <Menu.Button className="flex items-center gap-2 focus:outline-none">
-              <div
-                className={`relative w-8 h-8 ${
-                  uploading ? "cursor-wait" : "cursor-pointer"
-                }`}
-                onClick={handlePhotoClick}
-                title="Click to update profile photo"
-              >
+        <Menu as="div" className="relative">
+          <Menu.Button className="flex items-center space-x-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 rounded-full">
+            <div className="relative">
+              <div className={`w-9 h-9 rounded-full overflow-hidden border-2 border-transparent group-hover:border-blue-200 transition-all ${uploading ? "cursor-wait" : "cursor-pointer"}`} onClick={handlePhotoClick}>
                 <Image
                   src={photoSrc}
                   alt="Profile"
-                  width={40}
-                  height={40}
+                  width={36}
+                  height={36}
                   unoptimized
-                  className="rounded-full object-cover"
+                  className="object-cover w-full h-full"
                 />
-
                 {uploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-full">
-                    <svg
-                      className="animate-spin h-4 w-4 text-gray-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
-                      ></path>
-                    </svg>
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                   </div>
                 )}
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                Welcome, {user?.role || "User"}
-              </span>
-              <ChevronDownIcon className="w-4 h-4 text-gray-500" />
-            </Menu.Button>
-          </div>
-
-          <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right bg-white border border-gray-200 divide-y divide-gray-100 rounded-md shadow-lg focus:outline-none z-50">
-            <div className="py-1">
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={() => router.push("/admin/profiles")}
-                    className={`${
-                      active ? "bg-gray-100" : ""
-                    } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 1115 0H4.5z"
-                      />
-                    </svg>
-                    Profile
-                  </button>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={handleLogout}
-                    className={`${
-                      active ? "bg-gray-100" : ""
-                    } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3-3H9m0 0l3-3m-3 3l3 3"
-                      />
-                    </svg>
-                    Logout
-                  </button>
-                )}
-              </Menu.Item>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
-          </Menu.Items>
+            <div className="text-left hidden sm:block">
+              <p className="text-xs text-gray-500 capitalize">{user?.role || "Role"}</p>
+            </div>
+            <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+          </Menu.Button>
+
+          <Transition
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+              <div className="px-4 py-3">
+                <p className="text-sm font-medium text-gray-900 truncate">{user?.role || "User"}</p>
+                <p className="text-xs text-gray-500 truncate capitalize">{user?.email || user?.role || "Role"}</p>
+              </div>
+              <div className="py-1">
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={() => router.push("/admin/profiles")}
+                      className={`${
+                        active ? 'bg-gray-50 text-blue-600' : 'text-gray-700'
+                      } group flex w-full items-center px-4 py-2 text-sm transition-colors`}
+                    >
+                      <UserIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-blue-500" />
+                      My Profile
+                    </button>
+                  )}
+                </Menu.Item>
+                
+              </div>
+              <div className="py-1">
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={handleLogout}
+                      className={`${
+                        active ? 'bg-gray-50 text-red-600' : 'text-gray-700'
+                      } group flex w-full items-center px-4 py-2 text-sm transition-colors`}
+                    >
+                      <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-red-500" />
+                      Sign out
+                    </button>
+                  )}
+                </Menu.Item>
+              </div>
+            </Menu.Items>
+          </Transition>
         </Menu>
       )}
     </div>

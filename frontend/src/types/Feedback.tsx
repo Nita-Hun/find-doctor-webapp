@@ -1,3 +1,5 @@
+import { AppointmentDto } from "./Appointment";
+
 export interface Feedback {
   id?: number;
   rating: number;
@@ -21,7 +23,7 @@ export interface Appointment {
 
 export interface FeedbackFormModalProps {
   feedback: Feedback | null;
-  appointments: Appointment[];
+  appointments: AppointmentDto[];
   onClose: () => void;
   onSuccess: () => void;
 }

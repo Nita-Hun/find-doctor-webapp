@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import UserFormModal from '@/components/UserFormModal';
@@ -9,7 +9,6 @@ import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 import { UserDto } from '@/types/UserDto';
 import { PagedResponse } from '@/types/PagedResponse';
-import Image from 'next/image';
 import { FiSearch } from 'react-icons/fi';
 import UserThumbnail from '@/components/UserThumbnail';
 
@@ -18,7 +17,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
@@ -27,20 +26,37 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const roleOptions = [
-    { value: '', label: 'All Roles' },
-    { value: 'ADMIN', label: 'Admin' },
-    { value: 'PATIENT', label: 'Patient' },
-    { value: 'DOCTOR', label: 'Doctor' },
-  ];
+  const [allRoles, setAllRoles] = useState<{ id: number; name: string }[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
 
-  const roleColors: Record<string, string> = {
-    ADMIN: 'bg-purple-100 text-purple-800',
-    PATIENT: 'bg-blue-100 text-blue-800',
-    DOCTOR: 'bg-green-100 text-green-800',
-  };
+  const roleColors = useMemo(
+    () => ({
+      ADMIN: 'bg-purple-100 text-purple-800',
+      PATIENT: 'bg-blue-100 text-blue-800',
+      DOCTOR: 'bg-green-100 text-green-800',
+    }),
+    []
+  );
 
-  const fetchUsers = async () => {
+  function getRoleColor(roleName?: string) {
+    if (!roleName) return 'bg-gray-100 text-gray-800';
+    return roleColors[roleName as keyof typeof roleColors] || 'bg-gray-100 text-gray-800';
+  }
+
+  const formatDate = useCallback((dateString?: string | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -60,10 +76,9 @@ export default function UsersPage() {
         return;
       }
 
-      const data = response.data;
       setUsers(pagedData.content);
-      setTotalPages(data.page.totalPages);
-      setTotalItems(data.page.totalElements);
+      setTotalPages(pagedData.page.totalPages);
+      setTotalItems(pagedData.page.totalElements);
     } catch (err: any) {
       console.error('Error fetching users:', err);
       setError('Failed to load users. Please try again.');
@@ -71,11 +86,28 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, pageSize, searchTerm, roleFilter]);
+
+  const fetchRoles = useCallback(async () => {
+    setLoadingRoles(true);
+    try {
+      const response = await apiClient.get('/api/roles');
+      setAllRoles(response.data.content || []);
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+      toast.error('Failed to fetch roles');
+    } finally {
+      setLoadingRoles(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, [refreshKey, currentPage, searchTerm, pageSize, roleFilter]);
+  }, [fetchUsers, refreshKey]);
+
+  useEffect(() => {
+    fetchRoles();
+  }, [fetchRoles]);
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this user?')) {
@@ -106,19 +138,6 @@ export default function UsersPage() {
     setSelectedUser(null);
   };
 
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -141,26 +160,28 @@ export default function UsersPage() {
           <div className="relative flex-grow text-sm">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="text-gray-400" />
-                  </div>
-                    <input 
-                        type="text"
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        placeholder="Search users..."
-                        className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search users..."
+              className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
             <div className="flex items-center gap-2 w-full md:w-auto">
               <span className="text-gray-600 text-sm whitespace-nowrap">Role:</span>
               <select
                 value={roleFilter}
                 onChange={handleRoleFilterChange}
+                disabled={loadingRoles}
                 className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
               >
-                {roleOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                <option value="">All Roles</option>
+                {allRoles.map((role) => (
+                  <option key={role.id} value={role.name}>
+                    {role.name.charAt(0).toUpperCase() + role.name.slice(1).toLowerCase()}
                   </option>
                 ))}
               </select>
@@ -203,53 +224,51 @@ export default function UsersPage() {
 
       {/* Empty state */}
       {!isLoading && !error && users.length === 0 && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white z-20">
-          <div className="max-w-md w-full p-8 rounded-lg shadow text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="bg-white p-8 rounded-lg shadow text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            />
+          </svg>
+          <h3 className="mt-2 text-lg font-medium text-gray-900">
+            {searchTerm || roleFilter ? 'No matching users found' : 'No users available'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchTerm || roleFilter ? 'Try adjusting your search/filters' : 'Get started by adding a new user'}
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setRoleFilter('');
+                setSelectedUser(null);
+                setShowModal(true);
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-400 focus:outline-none"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">
-              {searchTerm || roleFilter ? 'No matching users found' : 'No users available'}
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || roleFilter ? 'Try adjusting your search/filters' : 'Get started by adding a new user'}
-            </p>
-            <div className="mt-6">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setRoleFilter('');
-                  setSelectedUser(null);
-                  setShowModal(true);
-                }}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-700 hover:bg-blue-400 focus:outline-none"
+              <svg
+                className="-ml-1 mr-2 h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="-ml-1 mr-2 h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Add User
-              </button>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              Add User
+            </button>
           </div>
         </div>
       )}
@@ -262,11 +281,10 @@ export default function UsersPage() {
               <thead className="bg-blue-600 hidden md:table-header-group">
                 <tr className="transition-colors duration-150">
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Photo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Password</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -275,45 +293,38 @@ export default function UsersPage() {
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-100`}
+                    className={`flex flex-col md:table-row md:flex-row bg-white md:bg-transparent mb-4 md:mb-0 rounded-lg md:rounded-none shadow md:shadow-none border border-gray-100 md:border-0 even:bg-blue-50`}
                   >
                     {/* ID */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">ID</span>
                       <span className="text-gray-800">#{user.id}</span>
                     </td>
-
-                    {/* Photo */}
+                    
+                    {/* User */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <span className="font-medium text-gray-500 md:hidden">Photo</span>
-                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-                        <UserThumbnail user={user} />
-                      </div>
+                      {UserThumbnail({ user })}
                     </td>
 
                     {/* Email */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Email</span>
-                      <span>{user.email}</span>
-                    </td>
-
-                    {/* Password */}
-                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <span className="font-medium text-gray-500 md:hidden">Password</span>
-                      <span className="text-gray-500">{'*'.repeat(8)}</span>
+                      <span className="text-gray-800">{user.email}</span>
                     </td>
 
                     {/* Role */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Role</span>
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${roleColors[user.role] || 'bg-gray-100 text-gray-800'}`}>
-                        {user.role}
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColor(user.role ?? '')}`}
+                      >
+                        {user.role ?? 'N/A'}
                       </span>
                     </td>
 
-                    {/* Created */}
+                    {/* Created At */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <span className="font-medium text-gray-500 md:hidden">Created</span>
+                      <span className="font-medium text-gray-500 md:hidden">Created At</span>
                       <span>{formatDate(user.createdAt)}</span>
                     </td>
 

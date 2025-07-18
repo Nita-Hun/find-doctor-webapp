@@ -8,7 +8,7 @@ import lombok.Data;
 public class UpdateUserRequest {
     private String email;
     private String password;
-    private String role;
+    private Long roleId;
     private String profilePhotoUrl;
 }
 

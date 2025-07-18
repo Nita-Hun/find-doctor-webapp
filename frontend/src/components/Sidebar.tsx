@@ -16,7 +16,7 @@ import {
 
 import { ComponentType, SVGProps } from 'react';
 import useCurrentUser from '@/hooks/useCurrentUser';
-import { FileEditIcon, FolderCodeIcon, HospitalIcon, LayoutDashboardIcon, TypeIcon, TypeOutlineIcon } from 'lucide-react';
+import { FileEditIcon, FolderCodeIcon, HistoryIcon, HospitalIcon, LayoutDashboardIcon, TypeIcon, TypeOutlineIcon } from 'lucide-react';
 
 interface MenuItem {
   label: string;
@@ -28,9 +28,6 @@ interface MenuItem {
 const adminItems: MenuItem[] = [
   { label: 'Dashboards', icon: LayoutDashboardIcon, href: '/admin/dashboards' },
   { label: 'Doctors', icon: UserCircleIcon, href: '/admin/doctors' },
-
-  
-
   { label: 'Patients', icon: UsersIcon, href: '/admin/patients' },
   { label: 'Appointments', icon: CalendarDaysIcon, href: '/admin/appointments' },
   { label: 'Specializations', icon: BriefcaseIcon, href: '/admin/specializations' },
@@ -60,13 +57,20 @@ const adminItems: MenuItem[] = [
 
 const doctorItems: MenuItem[] = [
   { label: 'Dashboards', icon: ClipboardDocumentListIcon, href: '/doctor/dashboards' },
-  { label: 'My Appointments', icon: CalendarDaysIcon, href: '/doctor/appointments' },
-  { label: 'My Patients', icon: UsersIcon, href: '/doctor/patients' },
+  { label: 'Upcoming Appointments', icon: CalendarDaysIcon, href: '/doctor/appointments' },
 ];
 
 const patientItems: MenuItem[] = [
-  { label: 'My Appointments', icon: CalendarDaysIcon, href: '/patient/appointments' },
-  { label: 'My Profile', icon: UserCircleIcon, href: '/patient/profile' },
+  {
+    label: 'My Appointments',
+    icon: ListBulletIcon,
+    children: [
+      { label: 'Upcoming', icon: CalendarDaysIcon, href: '/admin/upcoming-appointments' },
+      { label: 'Passed', icon: HistoryIcon, href: '/admin/passeds' },
+      
+    ],
+  },
+  { label: 'Feedbacks', icon: UserCircleIcon, href: '/patient/feedbacks' },
 ];
 
 export default function Sidebar() {
@@ -82,12 +86,12 @@ export default function Sidebar() {
     );
   }
 
-  const role = user?.role;
+  const roleName = user?.role;
   let menuItems: MenuItem[] = [];
 
-  if (role === 'ADMIN') menuItems = adminItems;
-  else if (role === 'DOCTOR') menuItems = doctorItems;
-  else if (role === 'PATIENT') menuItems = patientItems;
+  if (roleName === 'ADMIN') menuItems = adminItems;
+  else if (roleName === 'DOCTOR') menuItems = doctorItems;
+  else if (roleName === 'PATIENT') menuItems = patientItems;
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) => ({
@@ -97,37 +101,42 @@ export default function Sidebar() {
   };
 
   const renderMenuItem = (item: MenuItem, level = 0) => {
-    const hasChildren = item.children && item.children.length > 0;
-    const isOpen = openMenus[item.label];
+  const hasChildren = item.children && item.children.length > 0;
+  const isOpen = openMenus[item.label];
+  const isActive =
+    item.href ? pathname === item.href || pathname.startsWith(item.href + '/') : false;
 
-    // Active if exact match or starts with href + /
-    const isActive =
-      item.href
-        ? pathname === item.href || pathname.startsWith(item.href + '/')
-        : false;
+  const Icon = item.icon;
 
-    const Icon = item.icon;
-
-    return (
-      <div key={item.label}>
-        <div
-          onClick={() => hasChildren ? toggleMenu(item.label) : undefined}
-          className={`flex items-center gap-3 p-2 rounded-md cursor-pointer text-sm
-            ${isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}
-          `}
-          style={{ paddingLeft: `${level * 20}px` }}
-        >
-          <Icon className="h-5 w-5" />
-          {item.href && !hasChildren ? (
-            <Link href={item.href} passHref>
-              <span className="hidden lg:inline">{item.label}</span>
-            </Link>
-          ) : (
+  return (
+    <div key={item.label}>
+      <div
+        className={`flex items-center gap-2 p-2 rounded-md text-sm ${
+          isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'
+        }`}
+        style={{ paddingLeft: `${level * 20}px` }}
+      >
+        {item.href ? (
+          <Link href={item.href} className="flex flex-1 items-center gap-2">
+            <Icon className="h-5 w-5" />
             <span className="hidden lg:inline">{item.label}</span>
-          )}
-          {hasChildren && (
+          </Link>
+        ) : (
+          <div className="flex flex-1 items-center gap-2 cursor-default">
+            <Icon className="h-5 w-5" />
+            <span className="hidden lg:inline">{item.label}</span>
+          </div>
+        )}
+
+
+        {hasChildren && (
+          <button
+            onClick={() => toggleMenu(item.label)}
+            aria-label="Toggle Submenu"
+            className="ml-auto"
+          >
             <svg
-              className={`ml-auto h-4 w-4 transition-transform duration-200 ${
+              className={`h-4 w-4 transition-transform duration-200 ${
                 isOpen ? 'rotate-90' : ''
               }`}
               fill="none"
@@ -137,16 +146,20 @@ export default function Sidebar() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
-          )}
-        </div>
-        {hasChildren && isOpen && (
-          <div>
-            {item.children!.map((child) => renderMenuItem(child, level + 1))}
-          </div>
+          </button>
         )}
       </div>
-    );
-  };
+
+      {hasChildren && isOpen && (
+        <div>
+          {item.children!.map((child) => renderMenuItem(child, level + 1))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
   return (
     <nav className="p-4 space-y-2 overflow-y-auto">

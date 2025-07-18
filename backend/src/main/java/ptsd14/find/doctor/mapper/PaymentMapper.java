@@ -9,7 +9,7 @@ import ptsd14.find.doctor.model.Payment;
 public interface PaymentMapper {
 
     @Mapping(source = "appointment.id", target = "appointmentId")
-    @Mapping(target = "doctorName", expression = "java(payment.getAppointment().getDoctor().getFirstname() + \" \" + payment.getAppointment().getDoctor().getLastname())")
+    @Mapping(target = "patientName", expression = "java(payment.getAppointment().getPatient().getFirstname() + \" \" + payment.getAppointment().getPatient().getLastname())")
     PaymentDto toDto(Payment payment);
 
     // DTO to entity mapping as before

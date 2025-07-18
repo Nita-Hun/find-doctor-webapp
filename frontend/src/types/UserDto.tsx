@@ -1,8 +1,10 @@
+
 export interface UserDto {
   id: number;
   email: string;
   password: string;
-  role: string;
+  roleId: number | null; 
+  role: string 
   profilePhotoUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -12,7 +14,8 @@ export interface User {
   id?: number;
   email: string;
   password: string;
-  role: string;
+  roleId: number | null;
+  role: string 
   profilePhotoUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -29,3 +32,5 @@ export const roleColors: Record<string, string> = {
   PATIENT: "bg-blue-100 text-blue-800",
   DOCTOR: "bg-green-100 text-green-800",
 };
+
+

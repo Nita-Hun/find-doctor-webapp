@@ -15,10 +15,13 @@ public class AppointmentDto {
     private String patientName;
     private Long appointmentTypeId;
     private String appointmentTypeName;
+    private String doctorHospitalName;
+    private String doctorHospitalPhone;
     private LocalDateTime dateTime;
     private String note;
-    private String attachment;
+    private String status;
     private BigDecimal amount;
+    private String paymentStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

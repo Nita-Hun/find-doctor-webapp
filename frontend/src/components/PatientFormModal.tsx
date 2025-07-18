@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
-import { Patient, PatientFormModalProps } from '@/types/Patient';
 import { FiX } from 'react-icons/fi';
+import { Patient, PatientFormModalProps } from '@/types/Patient';
 
 const statusOptions = [
   { value: 'ACTIVE', label: 'Active' },
@@ -18,36 +18,92 @@ const genderOptions = [
   { value: 'OTHER', label: 'Other' },
 ];
 
-export default function PatientFormModal({ patient, onClose, onSuccess }: PatientFormModalProps) {
+export default function PatientFormModal({
+  patient,
+  users = [],
+  onClose,
+  onSuccess,
+}: PatientFormModalProps) {
   const [formData, setFormData] = useState<Patient>({
     firstname: '',
     lastname: '',
     status: 'ACTIVE',
     gender: 'MALE',
     dateOfBirth: '',
-    address: ''
+    address: '',
+    userId: 0,
   });
 
+  const [userOptions, setUserOptions] = useState<{ id: number; email: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await apiClient.get('/api/users', { params: { page: 0, size: 1000 } });
+        const data = res.data;
+        if (Array.isArray(data)) {
+          setUserOptions(data);
+        } else if (Array.isArray(data.content)) {
+          setUserOptions(data.content);
+        } else {
+          setUserOptions([]);
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        toast.error('Failed to load users');
+      }
+    }
+
+    if (users.length > 0) {
+      setUserOptions(users);
+    } else {
+      fetchUsers();
+    }
+  }, [users]);
 
   useEffect(() => {
     if (patient) {
       setFormData({
-        ...patient,
-        dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.split('T')[0] : ''
+        firstname: patient.firstname,
+        lastname: patient.lastname,
+        status: patient.status,
+        gender: patient.gender,
+        dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.split('T')[0] : '',
+        address: patient.address,
+        userId: patient.userId ?? 0,
+      });
+    } else {
+      setFormData({
+        firstname: '',
+        lastname: '',
+        status: 'ACTIVE',
+        gender: 'MALE',
+        dateOfBirth: '',
+        address: '',
+        userId: 0,
       });
     }
   }, [patient]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'userId' ? (value ? parseInt(value, 10) : 0) : value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.firstname || !formData.lastname || !formData.dateOfBirth || !formData.address) {
+
+    if (
+      !formData.firstname ||
+      !formData.lastname ||
+      !formData.dateOfBirth ||
+      !formData.address ||
+      !formData.userId
+    ) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -55,16 +111,16 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
     setLoading(true);
 
     try {
-      const data = {
+      const payload = {
         ...formData,
-        dateOfBirth: formData.dateOfBirth ? `${formData.dateOfBirth}T00:00:00` : null
+        dateOfBirth: `${formData.dateOfBirth}T00:00:00`,
       };
 
-      if (patient?.id) {
-        await apiClient.put(`/api/patients/${patient.id}`, data);
+      if (patient) {
+        await apiClient.put(`/api/patients/${patient.id}`, payload);
         toast.success('Patient updated successfully');
       } else {
-        await apiClient.post('/api/patients', data);
+        await apiClient.post('/api/patients', payload);
         toast.success('Patient created successfully');
       }
       onSuccess();
@@ -78,19 +134,14 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
-            {/* Modified header section to match first modal */}
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h2 className="text-xl font-semibold">
-                {patient ? 'Edit Patient' : 'Add New Patient'}
-              </h2>
-              <button 
-                onClick={onClose} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
+      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+        <div className="flex justify-between items-center border-b pb-4 mb-4">
+          <h2 className="text-xl font-semibold">{patient ? 'Edit Patient' : 'Add New Patient'}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <FiX size={24} />
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4 text-sm" noValidate>
           {/* First Name */}
           <div>
@@ -124,6 +175,30 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
             />
           </div>
 
+          {/* User Email */}
+          <div>
+            <label htmlFor="userId" className="block font-medium mb-1">
+              User Email <span className="text-red-600">*</span>
+            </label>
+            <select
+              id="userId"
+              name="userId"
+              value={formData.userId}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            >
+              <option value={0} disabled>
+                Select user
+              </option>
+              {userOptions.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.email}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Status */}
           <div>
             <label htmlFor="status" className="block font-medium mb-1">
@@ -137,8 +212,10 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
             >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </div>
@@ -156,8 +233,10 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
             >
-              {genderOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {genderOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </div>
@@ -212,15 +291,29 @@ export default function PatientFormModal({ patient, onClose, onSuccess }: Patien
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   {patient ? 'Updating...' : 'Creating...'}
                 </span>
-              ) : (
-                patient ? 'Update Patient' : 'Create'
-              )}
+              ) : patient ? 'Update Patient' : 'Create'}
             </button>
           </div>
         </form>

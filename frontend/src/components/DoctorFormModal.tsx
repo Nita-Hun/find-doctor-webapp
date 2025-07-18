@@ -3,40 +3,59 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
-import { Doctor, DoctorFormModalProps } from '@/types/DoctorDto';
 import { FiX } from 'react-icons/fi';
+import { Doctor, DoctorFormModalProps } from '@/types/DoctorDto';
 
 const statusOptions = [
   { value: 'ACTIVE', label: 'Active' },
   { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'ON_LEAVE', label: 'On Leave' },
+  { value: 'SUSPENDED', label: 'Suspended' },
 ];
 
-export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFormModalProps) {
+export default function DoctorFormModal({
+  doctor,
+  users = [],
+  onClose,
+  onSuccess,
+}: DoctorFormModalProps) {
   const [formData, setFormData] = useState<Doctor>({
     firstname: '',
     lastname: '',
     status: 'ACTIVE',
     hospitalId: 0,
     specializationId: 0,
+    userId: 0,
   });
 
   const [hospitals, setHospitals] = useState<{ id: number; name: string }[]>([]);
   const [specializations, setSpecializations] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userOptions, setUserOptions] = useState<{id:number, email:string}[]>([]);
+
 
   useEffect(() => {
   async function fetchDropdownData() {
     try {
-      const [hospitalsRes, specializationsRes] = await Promise.all([
-        apiClient.get('/api/hospitals'),
-        apiClient.get('/api/specializations')
-      ]);
-
+      const [hospitalsRes, specializationsRes, usersRes] = await Promise.all([
+          apiClient.get('/api/hospitals', {
+            params: { page: 0, size: 1000 }
+          }),
+          apiClient.get('/api/specializations', {
+            params: { page: 0, size: 1000 }
+          }),
+          apiClient.get('/api/users', {
+            params: { page: 0, size: 1000 }
+          })
+        ]);
       const hospitalsData = hospitalsRes.data;
       const specializationsData = specializationsRes.data;
+      const usersData = usersRes.data;
 
+      // Hospitals
       setHospitals(Array.isArray(hospitalsData) ? hospitalsData : hospitalsData.content ?? []);
 
+      // Specializations
       if (Array.isArray(specializationsData)) {
         setSpecializations(specializationsData);
       } else if (Array.isArray(specializationsData.content)) {
@@ -45,13 +64,33 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
         setSpecializations([]);
       }
 
+      // Users
+      if (Array.isArray(usersData)) {
+        setUserOptions(usersData);
+      } else if (Array.isArray(usersData.content)) {
+        setUserOptions(usersData.content);
+      } else {
+        setUserOptions([]);
+      }
+
+      // Pre-fill form if editing
       if (doctor) {
         setFormData({
           firstname: doctor.firstname,
           lastname: doctor.lastname,
           status: doctor.status,
           hospitalId: doctor.hospitalId,
-          specializationId: doctor.specializationId
+          specializationId: doctor.specializationId,
+          userId: doctor.userId ?? 0,
+        });
+      } else {
+        setFormData({
+          firstname: '',
+          lastname: '',
+          status: 'ACTIVE',
+          hospitalId: 0,
+          specializationId: 0,
+          userId: 0,
         });
       }
     } catch (error) {
@@ -66,16 +105,22 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: name.endsWith('Id') ? parseInt(value, 10) || 0 : value 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name.endsWith('Id') ? parseInt(value, 10) || 0 : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.firstname || !formData.lastname || !formData.hospitalId || !formData.specializationId) {
+
+    if (
+      !formData.firstname ||
+      !formData.lastname ||
+      !formData.hospitalId ||
+      !formData.specializationId ||
+      !formData.userId
+    ) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -83,7 +128,7 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
     setLoading(true);
 
     try {
-      if (doctor?.id) {
+      if (doctor) {
         await apiClient.put(`/api/doctors/${doctor.id}`, formData);
         toast.success('Doctor updated successfully');
       } else {
@@ -101,19 +146,19 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
-            {/* Modified header section to match first modal */}
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h2 className="text-xl font-semibold">
-                {doctor ? 'Edit Doctor' : 'Add New Doctor'}
-              </h2>
-              <button 
-                onClick={onClose} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FiX size={24} />
-              </button>
-            </div>
+      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+        <div className="flex justify-between items-center border-b pb-4 mb-4">
+          <h2 className="text-xl font-semibold">
+            {doctor ? 'Edit Doctor' : 'Add New Doctor'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FiX size={24} />
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4 text-sm" noValidate>
           {/* First Name */}
           <div>
@@ -147,6 +192,31 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
             />
           </div>
 
+          {/* User Email */}
+          <div>
+            <label htmlFor="userId" className="block font-medium mb-1">
+              User Email <span className="text-red-600">*</span>
+            </label>
+            <select
+                id="userId"
+                name="userId"
+                value={formData.userId}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                required
+              >
+                <option value={0} disabled>
+                  Select user
+                </option>
+                {userOptions.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
+
+          </div>
+
           {/* Status */}
           <div>
             <label htmlFor="status" className="block font-medium mb-1">
@@ -160,19 +230,21 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
             >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Hospital */}
           <div>
-            <label htmlFor="hospital" className="block font-medium mb-1">
+            <label htmlFor="hospitalId" className="block font-medium mb-1">
               Hospital <span className="text-red-600">*</span>
             </label>
             <select
-              id="hospital"
+              id="hospitalId"
               name="hospitalId"
               value={formData.hospitalId}
               onChange={handleChange}
@@ -182,19 +254,21 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
               <option value={0} disabled>
                 Select hospital
               </option>
-              {hospitals.map(h => (
-                <option key={h.id} value={h.id}>{h.name}</option>
+              {hospitals.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.name}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Specialization */}
           <div>
-            <label htmlFor="specialization" className="block font-medium mb-1">
+            <label htmlFor="specializationId" className="block font-medium mb-1">
               Specialization <span className="text-red-600">*</span>
             </label>
             <select
-              id="specialization"
+              id="specializationId"
               name="specializationId"
               value={formData.specializationId}
               onChange={handleChange}
@@ -204,8 +278,10 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
               <option value={0} disabled>
                 Select specialization
               </option>
-              {specializations.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+              {specializations.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
@@ -227,15 +303,29 @@ export default function DoctorFormModal({ doctor, onClose, onSuccess }: DoctorFo
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path>
                   </svg>
                   {doctor ? 'Updating...' : 'Creating...'}
                 </span>
-              ) : (
-                doctor ? 'Update Doctor' : 'Create'
-              )}
+              ) : doctor ? 'Update Doctor' : 'Create'}
             </button>
           </div>
         </form>

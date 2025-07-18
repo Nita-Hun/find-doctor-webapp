@@ -16,6 +16,7 @@ import ptsd14.find.doctor.dto.PaymentDto;
 import ptsd14.find.doctor.dto.PaymentRequest;
 import ptsd14.find.doctor.service.PaymentService;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    // ✅ Get all payments
+    // Get all payments
     @GetMapping
     public ResponseEntity<Page<PaymentDto>> getAllPayments(
         @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -41,14 +42,14 @@ public class PaymentController {
         return ResponseEntity.ok(paymentsPage);
     }
 
-    // ✅ Get payment by ID
+    // Get payment by ID
     @GetMapping("/{id}")
     public ResponseEntity<PaymentDto> getPaymentById(@PathVariable Long id) {
         PaymentDto payment = paymentService.getPaymentById(id);
         return ResponseEntity.ok(payment);
     }
 
-    // ✅ Create Stripe PaymentIntent securely using DTO
+    // Create Stripe PaymentIntent securely using DTO
     @PostMapping("/create-payment-intent")
     public ResponseEntity<?> createPaymentIntent(
             @Valid @RequestBody PaymentRequest request) {
@@ -80,6 +81,15 @@ public class PaymentController {
     paymentService.refundPayment(id);
     return ResponseEntity.ok("Payment refunded successfully.");
 }
+
+    @PostMapping("/pay-cash")
+    public ResponseEntity<String> payByCash(
+            @RequestParam Long appointmentId,
+            @RequestParam BigDecimal amount) {
+
+        paymentService.markPaidCash(appointmentId, amount);
+        return ResponseEntity.ok("Payment by cash recorded successfully");
+    }
 
 
 }

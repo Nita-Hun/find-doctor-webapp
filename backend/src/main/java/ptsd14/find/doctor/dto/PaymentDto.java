@@ -13,5 +13,5 @@ public class PaymentDto {
     private String paymentMethod;
     private LocalDateTime paidAt;
     private Long appointmentId;
-    private String doctorName;
+    private String patientName;
 }

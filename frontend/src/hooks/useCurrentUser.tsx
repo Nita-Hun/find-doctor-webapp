@@ -1,11 +1,19 @@
-'use client';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
+export interface Role {
+  id: number;
+  name: 'ADMIN' | 'DOCTOR' | 'PATIENT' | string;
+  permissions?: string[];
+}
+
 export interface CurrentUser {
   id: number;
-  username: string;
-  role: 'ADMIN' | 'DOCTOR' | 'PATIENT';
+  email: string;
+  role: Role;
+  profilePhotoUrl: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function useCurrentUser() {

@@ -6,10 +6,11 @@ import ptsd14.find.doctor.dto.DoctorDto;
 import ptsd14.find.doctor.model.Doctor;
 import ptsd14.find.doctor.model.Hospital;
 import ptsd14.find.doctor.model.Specialization;
+import ptsd14.find.doctor.model.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-08T18:17:13+0700",
+    date = "2025-07-18T17:33:48+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -27,6 +28,8 @@ public class DoctorMapperImpl implements DoctorMapper {
         doctorDto.setSpecializationName( doctorSpecializationName( doctor ) );
         doctorDto.setHospitalId( doctorHospitalId( doctor ) );
         doctorDto.setHospitalName( doctorHospitalName( doctor ) );
+        doctorDto.setUserId( doctorUserId( doctor ) );
+        doctorDto.setUserEmail( doctorUserEmail( doctor ) );
         doctorDto.setCreatedAt( doctor.getCreatedAt() );
         doctorDto.setFirstname( doctor.getFirstname() );
         doctorDto.setId( doctor.getId() );
@@ -128,5 +131,35 @@ public class DoctorMapperImpl implements DoctorMapper {
             return null;
         }
         return name;
+    }
+
+    private Long doctorUserId(Doctor doctor) {
+        if ( doctor == null ) {
+            return null;
+        }
+        User user = doctor.getUser();
+        if ( user == null ) {
+            return null;
+        }
+        Long id = user.getId();
+        if ( id == null ) {
+            return null;
+        }
+        return id;
+    }
+
+    private String doctorUserEmail(Doctor doctor) {
+        if ( doctor == null ) {
+            return null;
+        }
+        User user = doctor.getUser();
+        if ( user == null ) {
+            return null;
+        }
+        String email = user.getEmail();
+        if ( email == null ) {
+            return null;
+        }
+        return email;
     }
 }

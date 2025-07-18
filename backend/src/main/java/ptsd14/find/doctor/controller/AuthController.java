@@ -27,7 +27,8 @@ import ptsd14.find.doctor.dto.UserDto;
 import ptsd14.find.doctor.dto.RegisterRequest;
 import ptsd14.find.doctor.dto.UpdateProfileRequest;
 import ptsd14.find.doctor.jwt.JwtUtil;
-import ptsd14.find.doctor.model.Role;
+import ptsd14.find.doctor.model.UserRole;
+import ptsd14.find.doctor.repository.UserRoleRepository;
 import ptsd14.find.doctor.model.User;
 import ptsd14.find.doctor.repository.UserRepo;
 import ptsd14.find.doctor.service.UserService;
@@ -40,12 +41,13 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepo userRepository;
+    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
     @GetMapping("/admin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ROLE:edit')")
     public String adminDashboard() {
         return "Admin content";
     }
@@ -55,14 +57,14 @@ public class AuthController {
     public String doctorDashboard() {
         return "Doctor content";
     }
+
     @GetMapping("/patient")
     @PreAuthorize("hasRole('PATIENT')")
     public String patientDashboard() {
         return "Patient content";
     }
-    
 
-    // New endpoint to get current authenticated user info
+    // Get current authenticated user info
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDto> getCurrentUser() {
@@ -75,43 +77,39 @@ public class AuthController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Convert createdAt and updatedAt to String if they exist
-        String createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
-        String updatedAt = user.getUpdatedAt() != null ? user.getUpdatedAt().toString() : null;
-
-        UserDto userDto = new UserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getRole() != null ? user.getRole().name() : null,
-            user.getProfilePhotoUrl(),
-            createdAt,
-            updatedAt
-        );
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setRoleId(user.getRole() != null ? user.getRole().getId() : null);
+        // Set role as String (role name)
+        userDto.setRole(user.getRole() != null ? user.getRole().getName() : null);
+        userDto.setProfilePhotoUrl(user.getProfilePhotoUrl());
+        userDto.setCreatedAt(user.getCreatedAt());
+        userDto.setUpdatedAt(user.getUpdatedAt());
 
         return ResponseEntity.ok(userDto);
     }
 
-
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email is already taken");
-        }
-
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setProfilePhotoUrl("/uploads/default-profile.png");
-
-        try {
-            user.setRole(Role.valueOf(request.getRole()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role: " + request.getRole());
-        }
-
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully");
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        return ResponseEntity.badRequest().body("Email is already taken");
     }
+
+    User user = new User();
+    user.setEmail(request.getEmail());
+    user.setPassword(passwordEncoder.encode(request.getPassword()));
+    user.setProfilePhotoUrl("/uploads/default-profile.png");
+
+    // Always assign PATIENT role here, no input from client
+    UserRole role = userRoleRepository.findByName("PATIENT")
+        .orElseThrow(() -> new IllegalArgumentException("Role PATIENT not found"));
+    user.setRole(role);
+
+    userRepository.save(user);
+    return ResponseEntity.ok("User registered successfully");
+}
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -120,7 +118,6 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (AuthenticationException ex) {
-            // Return 401 Unauthorized with message
             Map<String, String> error = Map.of("error", "Invalid email or password");
             return ResponseEntity.status(401).body(error);
         }
@@ -128,22 +125,25 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
 
-        String dashboardUrl = switch(user.getRole()) {
-            case ADMIN -> "/admin/dashboards";
-            case DOCTOR -> "/doctor/dashboards";
-            case PATIENT -> "/patient/dashboards";
-        };
+        String dashboardUrl;
+        switch (user.getRole().getName().toUpperCase()) {
+            case "ADMIN" -> dashboardUrl = "/admin/dashboards";
+            case "DOCTOR" -> dashboardUrl = "/doctor/dashboards";
+            case "PATIENT" -> dashboardUrl = "/patient/dashboards";
+            default -> dashboardUrl = "/";
+        }
 
-        UserDto userDto = new UserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getRole() != null ? user.getRole().name() : null,
-            user.getProfilePhotoUrl(),
-            user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
-            user.getUpdatedAt() != null ? user.getUpdatedAt().toString() : null
-        );
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setRoleId(user.getRole() != null ? user.getRole().getId() : null);
+        // Set role as String (role name)
+        userDto.setRole(user.getRole() != null ? user.getRole().getName() : null);
+        userDto.setProfilePhotoUrl(user.getProfilePhotoUrl());
+        userDto.setCreatedAt(user.getCreatedAt());
+        userDto.setUpdatedAt(user.getUpdatedAt());
 
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", token);
@@ -180,24 +180,20 @@ public class AuthController {
             Path uploadDir = Paths.get(basePath, "uploads", "profile-photos");
             Files.createDirectories(uploadDir);
 
-            // Delete old photo if exists and is not the default photo
             String oldPhotoUrl = user.getProfilePhotoUrl();
             if (oldPhotoUrl != null && !oldPhotoUrl.equals("/uploads/default-profile.png")) {
                 Path oldPhotoPath = Paths.get(basePath, oldPhotoUrl.replaceFirst("/", ""));
                 try {
                     Files.deleteIfExists(oldPhotoPath);
                 } catch (Exception ex) {
-                    // Log warning, but do not fail the whole request
                     System.err.println("Failed to delete old profile photo: " + ex.getMessage());
                 }
             }
 
-            // Save new photo
             String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
             Path filepath = uploadDir.resolve(filename);
             file.transferTo(filepath.toFile());
 
-            // Update user's profilePhotoUrl
             user.setProfilePhotoUrl("/uploads/profile-photos/" + filename);
             userRepository.save(user);
 
@@ -207,7 +203,6 @@ public class AuthController {
         }
     }
 
-
     @PutMapping("/update-profile")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest request) {
@@ -216,8 +211,11 @@ public class AuthController {
 
         UserDto updatedUser = userService.updateProfile(oldEmail, request);
 
-        // Generate new token with updated email/role if changed
-        String newToken = jwtUtil.generateToken(updatedUser.getEmail(), updatedUser.getRole());
+        // Generate new token using role name (as string)
+        String newToken = jwtUtil.generateToken(
+            updatedUser.getEmail(),
+            updatedUser.getRole() != null ? updatedUser.getRole() : "USER"
+        );
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Profile updated");
@@ -226,8 +224,5 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
-
-
 
 }

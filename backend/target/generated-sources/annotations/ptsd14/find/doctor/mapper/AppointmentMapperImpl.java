@@ -5,13 +5,15 @@ import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 import ptsd14.find.doctor.dto.AppointmentDto;
 import ptsd14.find.doctor.model.Appointment;
+import ptsd14.find.doctor.model.AppointmentStatus;
 import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.model.Doctor;
 import ptsd14.find.doctor.model.Patient;
+import ptsd14.find.doctor.model.Payment;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-08T18:17:13+0700",
+    date = "2025-07-18T17:33:48+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -30,7 +32,10 @@ public class AppointmentMapperImpl implements AppointmentMapper {
         appointmentDto.setAppointmentTypeId( appointmentAppointmentTypeId( appointment ) );
         appointmentDto.setAppointmentTypeName( appointmentAppointmentTypeName( appointment ) );
         appointmentDto.setAmount( appointmentAppointmentTypePrice( appointment ) );
-        appointmentDto.setAttachment( appointment.getAttachment() );
+        appointmentDto.setPaymentStatus( appointmentPaymentPaymentStatus( appointment ) );
+        if ( appointment.getStatus() != null ) {
+            appointmentDto.setStatus( appointment.getStatus().name() );
+        }
         appointmentDto.setCreatedAt( appointment.getCreatedAt() );
         appointmentDto.setDateTime( appointment.getDateTime() );
         appointmentDto.setId( appointment.getId() );
@@ -39,6 +44,8 @@ public class AppointmentMapperImpl implements AppointmentMapper {
 
         appointmentDto.setDoctorName( appointment.getDoctor() != null ? appointment.getDoctor().getFirstname() + " " + appointment.getDoctor().getLastname() : null );
         appointmentDto.setPatientName( appointment.getPatient() != null ? appointment.getPatient().getFirstname() + " " + appointment.getPatient().getLastname() : null );
+        appointmentDto.setDoctorHospitalName( appointment.getDoctor() != null && appointment.getDoctor().getHospital() != null ? appointment.getDoctor().getHospital().getName() : null );
+        appointmentDto.setDoctorHospitalPhone( appointment.getDoctor() != null && appointment.getDoctor().getHospital() != null ? appointment.getDoctor().getHospital().getPhone() : null );
 
         return appointmentDto;
     }
@@ -51,7 +58,9 @@ public class AppointmentMapperImpl implements AppointmentMapper {
 
         Appointment appointment = new Appointment();
 
-        appointment.setAttachment( dto.getAttachment() );
+        if ( dto.getStatus() != null ) {
+            appointment.setStatus( Enum.valueOf( AppointmentStatus.class, dto.getStatus() ) );
+        }
         appointment.setDateTime( dto.getDateTime() );
         appointment.setId( dto.getId() );
         appointment.setNote( dto.getNote() );
@@ -67,8 +76,8 @@ public class AppointmentMapperImpl implements AppointmentMapper {
             return;
         }
 
-        if ( dto.getAttachment() != null ) {
-            entity.setAttachment( dto.getAttachment() );
+        if ( dto.getStatus() != null ) {
+            entity.setStatus( Enum.valueOf( AppointmentStatus.class, dto.getStatus() ) );
         }
         if ( dto.getDateTime() != null ) {
             entity.setDateTime( dto.getDateTime() );
@@ -156,5 +165,20 @@ public class AppointmentMapperImpl implements AppointmentMapper {
             return null;
         }
         return price;
+    }
+
+    private String appointmentPaymentPaymentStatus(Appointment appointment) {
+        if ( appointment == null ) {
+            return null;
+        }
+        Payment payment = appointment.getPayment();
+        if ( payment == null ) {
+            return null;
+        }
+        String paymentStatus = payment.getPaymentStatus();
+        if ( paymentStatus == null ) {
+            return null;
+        }
+        return paymentStatus;
     }
 }

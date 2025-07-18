@@ -8,11 +8,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import ptsd14.find.doctor.dto.PatientDto;
 import ptsd14.find.doctor.service.PatientService;
-
 
 @RestController
 @RequestMapping("/api/patients")
@@ -34,11 +34,17 @@ public class PatientController {
 
         var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "firstname"));
 
-        // Pass both search and status to the service
         Page<PatientDto> patientsPage = patientService.getAll(pageable, search, status);
 
         return ResponseEntity.ok(patientsPage);
     }
+    @GetMapping("/my")
+    public ResponseEntity<PatientDto> getMyPatientInfo(Authentication authentication) {
+    String email = authentication.getName(); // or use another identifier based on your auth
+    PatientDto patient = patientService.getPatientByUserEmail(email);
+    return ResponseEntity.ok(patient);
+    }
+
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -49,7 +55,7 @@ public class PatientController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
     public ResponseEntity<PatientDto> createPatient(@RequestBody PatientDto dto) {
         PatientDto createdPatient = patientService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPatient);
@@ -68,5 +74,7 @@ public class PatientController {
         patientService.delete(id);
         return ResponseEntity.noContent().build();
     }
-}
 
+    
+
+}

@@ -2,6 +2,7 @@ package ptsd14.find.doctor.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import ptsd14.find.doctor.mapper.AppointmentTypeMapper;
 import ptsd14.find.doctor.model.AppointmentType;
 import ptsd14.find.doctor.repository.AppointmentTypeRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -92,4 +94,13 @@ public class AppointmentTypeService {
             );
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<AppointmentTypeDto> getAllSortedByName() {
+    List<AppointmentType> types = appointmentTypeRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+    return types.stream()
+                .map(appointmentTypeMapper::toDto)
+                .toList();
+}
+
 }

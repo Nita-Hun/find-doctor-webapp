@@ -14,3 +14,4 @@ export interface AppointmentTypeDto {
   createdAt?: string;
   updatedAt?: string;
 }
+

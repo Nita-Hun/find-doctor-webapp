@@ -12,11 +12,14 @@ public interface DoctorMapper {
     @Mapping(target = "specializationName", source = "specialization.name")
     @Mapping(target = "hospitalId", source = "hospital.id")
     @Mapping(target = "hospitalName", source = "hospital.name")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userEmail", source = "user.email")
     DoctorDto toDto(Doctor doctor);
 
     // DTO -> ENTITY
     @Mapping(target = "specialization", ignore = true)
     @Mapping(target = "hospital", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Doctor toEntity(DoctorDto doctorDto);
@@ -25,6 +28,7 @@ public interface DoctorMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "specialization", ignore = true)
     @Mapping(target = "hospital", ignore = true)
+    @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateFromDto(DoctorDto dto, @MappingTarget Doctor entity);

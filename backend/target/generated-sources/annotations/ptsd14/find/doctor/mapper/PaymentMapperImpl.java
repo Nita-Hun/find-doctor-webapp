@@ -8,7 +8,7 @@ import ptsd14.find.doctor.model.Payment;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-08T18:17:13+0700",
+    date = "2025-07-18T17:33:48+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -29,7 +29,7 @@ public class PaymentMapperImpl implements PaymentMapper {
         paymentDto.setPaymentMethod( payment.getPaymentMethod() );
         paymentDto.setPaymentStatus( payment.getPaymentStatus() );
 
-        paymentDto.setDoctorName( payment.getAppointment().getDoctor().getFirstname() + " " + payment.getAppointment().getDoctor().getLastname() );
+        paymentDto.setPatientName( payment.getAppointment().getPatient().getFirstname() + " " + payment.getAppointment().getPatient().getLastname() );
 
         return paymentDto;
     }

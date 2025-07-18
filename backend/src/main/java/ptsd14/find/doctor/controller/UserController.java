@@ -2,7 +2,6 @@ package ptsd14.find.doctor.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,7 +12,6 @@ import ptsd14.find.doctor.dto.CreateUserRequest;
 import ptsd14.find.doctor.dto.UpdateUserRequest;
 import ptsd14.find.doctor.dto.UserDto;
 import ptsd14.find.doctor.service.UserService;
-import ptsd14.find.doctor.model.Role;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,7 +26,7 @@ public class UserController {
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) Role role // ⭐ change String to Role
+        @RequestParam(required = false) String role // 🔁 changed from Role enum to String
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 

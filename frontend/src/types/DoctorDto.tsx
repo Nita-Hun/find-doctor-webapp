@@ -7,6 +7,9 @@ export interface Doctor {
   specializationId: number;
   createdAt?: string;
   updatedAt?: string;
+
+  userId?: number;    
+  userEmail?: string;
 }
 
 export interface DoctorDto {
@@ -20,11 +23,52 @@ export interface DoctorDto {
   specializationName?: string;
   createdAt: string;
   updatedAt: string;
+
+  userId?: number;    
+  userEmail?: string; 
+}
+
+export interface UserSimple {
+  id: number;
+  email: string;
 }
 
 export interface DoctorFormModalProps {
   doctor?: Doctor | null;
+  users?: UserSimple[]; 
   onClose: () => void;
   onSuccess: () => void;
 }
+export interface DoctorDashboardDto {
+  totalPatients: number;
+  consultations: number;
+  chart: {
+    month: string;
+    male: number;
+    female: number;
+  }[];
+  doctor: {
+    id: number;
+    name: string;
+    specialization: string;
+    photoUrl: string;
+    rating: number;
+    ratingCount: number;
+  };
+  colleagues: {
+    id: number;
+    name: string;
+    specialization: string;
+    photoUrl: string;
+    rating: number;
+  }[];
+  recentPatients: {
+    id: number;
+    name: string;
+    age: number;
+    date: string;
+  }[];
+}
+
+
 

@@ -1,6 +1,7 @@
 // app/admin/layout.tsx or wherever your layout file is
 'use client';
 
+import Logo from '@/components/Logo';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@components/Topbar';
 import Image from 'next/image';
@@ -14,7 +15,7 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-[17%] md:w-[8%] lg:w-[16%] xl:w-[17%] bg-white shadow-md">
         <Link href="/" className="flex items-center justify-center lg:justify-start gap-2 p-4">
-          <Image src="/assets/images/finddrlogo.png" alt="logo" width={50} height={80} />
+          <Logo />
         </Link>
         <Sidebar />
       </aside>

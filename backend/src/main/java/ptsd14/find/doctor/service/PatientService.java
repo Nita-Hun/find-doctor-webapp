@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +13,9 @@ import ptsd14.find.doctor.dto.PatientDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.PatientMapper;
 import ptsd14.find.doctor.model.Patient;
+import ptsd14.find.doctor.model.User;
 import ptsd14.find.doctor.repository.PatientRepository;
+import ptsd14.find.doctor.repository.UserRepo;
 
 import java.util.Optional;
 
@@ -21,6 +25,7 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
+    private final UserRepo userRepository;
 
     @Transactional(readOnly = true)
     public Page<PatientDto> getAll(Pageable pageable, String search, String status) {
@@ -51,29 +56,59 @@ public class PatientService {
             );
         } else {
             // No filters
-            patients = patientRepository.findBy(pageable);
+            patients = patientRepository.findAll(pageable);
         }
 
         return patients.map(patientMapper::toDto);
     }
 
-     @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public Optional<PatientDto> getById(Long id) {
-        return patientRepository.findById(id)
-                .map(patientMapper::toDto);
+    return patientRepository.findWithUserById(id)
+            .map(patientMapper::toDto);
     }
-
+    
+    @Transactional
     public PatientDto create(PatientDto dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+        
+        //Check if the user already has a patient profile
+        Optional<Patient> existingPatient = patientRepository.findByUserId(user.getId());
+        if (existingPatient.isPresent()) {
+            throw new IllegalStateException("You already have a patient profile");
+        }
+
         Patient patient = patientMapper.toEntity(dto);
         patient.setId(null);
+        patient.setUser(user);
+
+        if (patient.getStatus() == null || patient.getStatus().isEmpty()) {
+            patient.setStatus("INACTIVE"); // or ACTIVE if you prefer
+        }
+
         return patientMapper.toDto(patientRepository.save(patient));
     }
 
+    @Transactional
     public PatientDto update(Long id, PatientDto dto) {
-        Patient existing = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
-        patientMapper.updateFromDto(dto, existing);
-        return patientMapper.toDto(patientRepository.save(existing));
+    Patient existing = patientRepository.findWithUserById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
+
+    if (dto.getUserId() != null && dto.getUserId() > 0) {
+        User user = userRepository.findById(dto.getUserId())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        existing.setUser(user);
+    } else {
+        existing.setUser(null);
+    }
+
+    patientMapper.updateFromDto(dto, existing);
+
+    return patientMapper.toDto(patientRepository.save(existing));
     }
 
     public void delete(Long id) {
@@ -82,6 +117,14 @@ public class PatientService {
         }
         patientRepository.deleteById(id);
     }
+
+    public PatientDto getPatientByUserEmail(String email) {
+    Patient patient = patientRepository.findByUserEmail(email)
+        .orElseThrow(() -> new ResourceNotFoundException("Patient not found for user email: " + email));
+    return patientMapper.toDto(patient);
+    }
+
+
 
 }
 

@@ -210,7 +210,7 @@ export default function PaymentsListPage() {
                 <tr className="transition-colors duration-150">
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Appointment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Doctor</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Patient</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Amount</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Method</th>
@@ -240,7 +240,7 @@ export default function PaymentsListPage() {
                     {/* Doctor */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Doctor</span>
-                      <span>{payment.doctorName}</span>
+                      <span>{payment.patientName}</span>
                     </td>
 
                     {/* Amount */}

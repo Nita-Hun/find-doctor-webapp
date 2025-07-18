@@ -6,11 +6,10 @@ import toast from 'react-hot-toast';
 import { User, UserFormModalProps } from '@/types/UserDto';
 import { FiX } from 'react-icons/fi';
 
-const roleOptions = [
-  { value: 'ADMIN', label: 'Admin' },
-  { value: 'DOCTOR', label: 'Doctor' },
-  { value: 'PATIENT', label: 'Patient' },
-];
+interface RoleDto {
+  id: number;
+  name: string;
+}
 
 // Base backend URL from env or fallback
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
@@ -26,23 +25,53 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'PATIENT',
+    roleId: '',  // <-- use roleId here as string for select binding
     profilePhotoUrl: '',
   });
+  const [roles, setRoles] = useState<RoleDto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Populate form when editing
   useEffect(() => {
     if (user) {
       setFormData({
         email: user.email,
         password: '',
-        role: user.role,
+        roleId: user.roleId ? String(user.roleId) : '', // <-- assumes user.roleId exists, else you must add it to UserDto on backend
         profilePhotoUrl: user.profilePhotoUrl || '',
+      });
+    } else {
+      // Clear form when adding new user
+      setFormData({
+        email: '',
+        password: '',
+        roleId: '',
+        profilePhotoUrl: '',
       });
     }
   }, [user]);
+
+  // Fetch roles from backend on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      setLoadingRoles(true);
+      try {
+        const res = await apiClient.get('/api/roles');
+        // assuming paged response:
+        setRoles(res.data.content || []);
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+        toast.error('Failed to load roles');
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -104,8 +133,8 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email || (!user?.id && !formData.password)) {
-      toast.error('Please fill all required fields');
+    if (!formData.email || (!user?.id && !formData.password) || !formData.roleId) {
+      toast.error('Please fill all required fields, including role');
       return;
     }
 
@@ -114,26 +143,19 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
     try {
       const data: Record<string, any> = {
         email: formData.email,
-        role: formData.role,
+        roleId: Number(formData.roleId), // send roleId as number
       };
 
       if (!user?.id) {
-        // New user creation requires password
         data.password = formData.password;
       } else if (formData.password) {
-        // Optional: update password
         data.password = formData.password;
       }
 
-      // Normalize URLs before comparing
+      // Normalize photo URLs for comparison
       const normalizedFormPhotoUrl = normalizeUrl(formData.profilePhotoUrl);
       const normalizedUserPhotoUrl = normalizeUrl(user?.profilePhotoUrl);
 
-      console.log('Current user.profilePhotoUrl:', normalizedUserPhotoUrl);
-      console.log('Form photo URL:', normalizedFormPhotoUrl);
-      console.log('Include photo URL in request?', normalizedFormPhotoUrl !== normalizedUserPhotoUrl);
-
-      // ONLY include profilePhotoUrl if it changed (based on normalized URLs)
       if (
         formData.profilePhotoUrl &&
         normalizedFormPhotoUrl !== normalizedUserPhotoUrl
@@ -168,6 +190,8 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
+            aria-label="Close"
+            type="button"
           >
             <FiX size={24} />
           </button>
@@ -186,6 +210,8 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
+              autoComplete="email"
+              disabled={loading}
             />
           </div>
 
@@ -203,27 +229,37 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded px-3 py-2"
                 required
+                autoComplete="new-password"
+                disabled={loading}
               />
             </div>
           )}
 
           {/* Role */}
           <div>
-            <label htmlFor="role" className="block font-medium mb-1">
+            <label htmlFor="roleId" className="block font-medium mb-1">
               Role <span className="text-red-600">*</span>
             </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            >
-              {roleOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
+            {loadingRoles ? (
+              <div>Loading roles...</div>
+            ) : (
+              <select
+                id="roleId"
+                name="roleId"
+                value={formData.roleId}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                required
+                disabled={loading}
+              >
+                <option value="">Select role</option>
+                {roles.map(role => (
+                  <option key={role.id} value={String(role.id)}>
+                    {role.name.charAt(0).toUpperCase() + role.name.slice(1).toLowerCase()}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Profile Photo Upload */}
@@ -234,7 +270,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
             <div className="flex items-center gap-3">
               {formData.profilePhotoUrl ? (
                 <img
-                  src={`${formData.profilePhotoUrl}`}
+                  src={normalizeUrl(formData.profilePhotoUrl)}
                   alt="Profile"
                   className="w-12 h-12 rounded-full object-cover border"
                 />
@@ -249,11 +285,12 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
                 accept="image/*"
                 className="hidden"
                 onChange={handleFileChange}
+                disabled={uploading || loading}
               />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
+                disabled={uploading || loading}
                 className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
               >
                 {uploading ? 'Uploading...' : 'Upload Photo'}
@@ -266,19 +303,19 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
             <button
               type="button"
               onClick={onClose}
-              disabled={loading}
+              disabled={loading || uploading}
               className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>

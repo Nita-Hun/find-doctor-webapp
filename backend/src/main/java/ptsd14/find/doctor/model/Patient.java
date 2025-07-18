@@ -53,6 +53,11 @@ public class Patient {
     @JsonIgnore 
     private List<Appointment> appointments;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
+
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination';
 import { PatientDto } from '@/types/Patient';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
+import { UserSimple } from '@/types/DoctorDto';
 
 const statusOptions = [
   { value: '', label: 'All Statuses' },
@@ -37,7 +38,9 @@ export default function PatientsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [users, setUsers] = useState<UserSimple[]>([]);
 
+  // Fetch patients data
   const fetchPatients = async () => {
     setIsLoading(true);
     setError(null);
@@ -53,14 +56,15 @@ export default function PatientsPage() {
 
       const pagedData = response.data;
 
+      // If no results and not first page, go back a page
       if (pagedData.content.length === 0 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
         return;
       }
-      const data = response.data;
+
       setPatients(pagedData.content);
-      setTotalPages(data.page.totalPages);
-      setTotalItems(data.page.totalElements);
+      setTotalPages(pagedData.page.totalPages);
+      setTotalItems(pagedData.page.totalElements);
     } catch (err: any) {
       console.error('Error fetching patients:', err);
       setError('Failed to load patients. Please try again.');
@@ -70,6 +74,23 @@ export default function PatientsPage() {
     }
   };
 
+  // Fetch users data (for PatientFormModal user dropdown)
+  const fetchUsers = async () => {
+    try {
+      const res = await apiClient.get<UserSimple[]>('/api/users');
+      setUsers(res.data);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      toast.error('Failed to load user list');
+    }
+  };
+
+  // Load users once when component mounts
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Reload patients when dependencies change
   useEffect(() => {
     fetchPatients();
   }, [refreshKey, currentPage, searchTerm, pageSize, statusFilter]);
@@ -153,13 +174,13 @@ export default function PatientsPage() {
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="text-gray-400" />
             </div>
-                <input 
-                    type="text"
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    placeholder="Search patients..."
-                    className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search patients..."
+              className="pl-10 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -273,9 +294,9 @@ export default function PatientsPage() {
               <thead className="bg-blue-600 hidden md:table-header-group">
                 <tr className="transition-colors duration-150">
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Patient</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Patient Details</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Age</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Address</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Last Updated</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Actions</th>
@@ -293,16 +314,30 @@ export default function PatientsPage() {
                       <span className="font-medium text-gray-500 md:hidden">ID</span>
                       <span className="text-gray-800">#{patient.id}</span>
                     </td>
-                    {/* Patient */}
+                    
+                    {/* Patient Details (Name, Gender, Email) */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <span className="font-medium text-gray-500 md:hidden">Patient</span>
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-blue-600 font-semibold">
-                            {patient.firstname.charAt(0)}{patient.lastname.charAt(0)}
-                          </span>
+                      <span className="font-medium text-gray-500 md:hidden">Patient Details</span>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                            <span className="text-blue-600 font-semibold">
+                              {patient.firstname.charAt(0)}{patient.lastname.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-gray-800 font-medium">{patient.firstname} {patient.lastname}</div>
+                            <div className="text-gray-500 text-xs">
+                              <span className="capitalize">{patient.gender.toLowerCase()}</span>
+                              {patient.userEmail && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>{patient.userEmail}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-gray-800">{patient.firstname} {patient.lastname}</span>
                       </div>
                     </td>
 
@@ -312,15 +347,10 @@ export default function PatientsPage() {
                       <span>{calculateAge(patient.dateOfBirth)} years</span>
                     </td>
 
-                    {/* Details */}
+                    {/* Address */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <span className="font-medium text-gray-500 md:hidden">Details</span>
-                      <div>
-                        <div className="text-gray-900">{patient.address}</div>
-                        <div className="text-gray-500 text-xs">
-                          DOB: {formatDate(patient.dateOfBirth)}
-                        </div>
-                      </div>
+                      <span className="font-medium text-gray-500 md:hidden">Address</span>
+                      <div className="text-gray-900">{patient.address}</div>
                     </td>
 
                     {/* Status */}
@@ -376,6 +406,7 @@ export default function PatientsPage() {
       {showModal && (
         <PatientFormModal
           patient={selectedPatient}
+          users={users}
           onClose={() => setShowModal(false)}
           onSuccess={handleSuccess}
         />

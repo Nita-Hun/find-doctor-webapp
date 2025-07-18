@@ -4,10 +4,11 @@ import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 import ptsd14.find.doctor.dto.PatientDto;
 import ptsd14.find.doctor.model.Patient;
+import ptsd14.find.doctor.model.User;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-08T18:17:13+0700",
+    date = "2025-07-18T17:33:48+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -21,6 +22,8 @@ public class PatientMapperImpl implements PatientMapper {
 
         PatientDto patientDto = new PatientDto();
 
+        patientDto.setUserId( patientUserId( patient ) );
+        patientDto.setUserEmail( patientUserEmail( patient ) );
         patientDto.setAddress( patient.getAddress() );
         patientDto.setCreatedAt( patient.getCreatedAt() );
         patientDto.setDateOfBirth( patient.getDateOfBirth() );
@@ -77,5 +80,35 @@ public class PatientMapperImpl implements PatientMapper {
         if ( dto.getStatus() != null ) {
             entity.setStatus( dto.getStatus() );
         }
+    }
+
+    private Long patientUserId(Patient patient) {
+        if ( patient == null ) {
+            return null;
+        }
+        User user = patient.getUser();
+        if ( user == null ) {
+            return null;
+        }
+        Long id = user.getId();
+        if ( id == null ) {
+            return null;
+        }
+        return id;
+    }
+
+    private String patientUserEmail(Patient patient) {
+        if ( patient == null ) {
+            return null;
+        }
+        User user = patient.getUser();
+        if ( user == null ) {
+            return null;
+        }
+        String email = user.getEmail();
+        if ( email == null ) {
+            return null;
+        }
+        return email;
     }
 }

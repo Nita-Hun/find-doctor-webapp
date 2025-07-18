@@ -6,16 +6,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import ptsd14.find.doctor.dto.AppointmentDto;
+import ptsd14.find.doctor.model.AppointmentStatus;
 import ptsd14.find.doctor.service.AppointmentService;
+import ptsd14.find.doctor.service.UserService;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 @RestController
@@ -25,23 +22,26 @@ import java.time.LocalDateTime;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final UserService userService;
 
-
+    /**
+     * ADMIN: List all appointments (with optional search).
+     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AppointmentDto>> getAllAppointments(
-        @RequestParam(required = false, defaultValue = "0") Integer page,
-        @RequestParam(defaultValue = "10") int size,
-        @RequestParam(required = false) String search
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search
     ) {
-        int pageNumber = (page != null && page >= 0) ? page : 0;
-
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "doctorFirstname"));
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "doctorFirstname"));
         Page<AppointmentDto> appointmentsPage = appointmentService.getAll(pageable, search);
-
         return ResponseEntity.ok(appointmentsPage);
     }
 
+    /**
+     * ADMIN: Get a single appointment by ID.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AppointmentDto> getById(@PathVariable Long id) {
@@ -50,15 +50,17 @@ public class AppointmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasRole('ADMIN')")
+    /**
+     * ADMIN or PATIENT: Create a new appointment.
+     */
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
     public ResponseEntity<AppointmentDto> create(
-            @RequestParam("doctorId") Long doctorId,
-            @RequestParam("patientId") Long patientId,
-            @RequestParam("appointmentTypeId") Long appointmentTypeId,
-            @RequestParam("dateTime") LocalDateTime dateTime,
-            @RequestParam("note") String note,
-            @RequestParam(value = "attachment", required = false) MultipartFile attachment
+            @RequestParam Long doctorId,
+            @RequestParam Long patientId,
+            @RequestParam Long appointmentTypeId,
+            @RequestParam LocalDateTime dateTime,
+            @RequestParam String note
     ) {
         AppointmentDto dto = new AppointmentDto();
         dto.setDoctorId(doctorId);
@@ -67,25 +69,22 @@ public class AppointmentController {
         dto.setDateTime(dateTime);
         dto.setNote(note);
 
-        // If a file is attached, upload it and set the URL
-        if (attachment != null && !attachment.isEmpty()) {
-            String fileUrl = saveAttachmentFile(attachment);
-            dto.setAttachment(fileUrl);
-        }
-
-        return ResponseEntity.ok(appointmentService.create(dto));
+        AppointmentDto created = appointmentService.create(dto);
+        return ResponseEntity.ok(created);
     }
 
-    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
+    /**
+     * ADMIN: Update an appointment.
+     */
+    @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AppointmentDto> update(
             @PathVariable Long id,
-            @RequestParam("doctorId") Long doctorId,
-            @RequestParam("patientId") Long patientId,
-            @RequestParam("appointmentTypeId") Long appointmentTypeId,
-            @RequestParam("dateTime") LocalDateTime dateTime,
-            @RequestParam("note") String note,
-            @RequestParam(value = "attachment", required = false) MultipartFile attachment
+            @RequestParam Long doctorId,
+            @RequestParam Long patientId,
+            @RequestParam Long appointmentTypeId,
+            @RequestParam LocalDateTime dateTime,
+            @RequestParam String note
     ) {
         AppointmentDto dto = new AppointmentDto();
         dto.setDoctorId(doctorId);
@@ -94,14 +93,13 @@ public class AppointmentController {
         dto.setDateTime(dateTime);
         dto.setNote(note);
 
-        if (attachment != null && !attachment.isEmpty()) {
-            String fileUrl = saveAttachmentFile(attachment);
-            dto.setAttachment(fileUrl);
-        }
-
-        return ResponseEntity.ok(appointmentService.update(id, dto));
+        AppointmentDto updated = appointmentService.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
+    /**
+     * ADMIN: Delete an appointment.
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
@@ -109,30 +107,85 @@ public class AppointmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/upload")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> uploadAttachment(@RequestParam("file") MultipartFile file) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is empty");
-        }
-
-        String fileUrl = saveAttachmentFile(file);
-        return ResponseEntity.ok(fileUrl);
+    /**
+     * DOCTOR: Mark appointment as confirmed.
+     */
+    @PatchMapping("/{id}/confirm")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<AppointmentDto> confirm(@PathVariable Long id) {
+        AppointmentDto updated = appointmentService.updateStatus(id, AppointmentStatus.CONFIRMED);
+        return ResponseEntity.ok(updated);
     }
 
-    private String saveAttachmentFile(MultipartFile file) {
-        try {
-            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            String uploadDir = "uploads/appointments/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
-            Path filepath = Paths.get(uploadDir + filename);
-            Files.write(filepath, file.getBytes());
-            return "/uploads/appointments/" + filename;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save attachment file", e);
-        }
+    /**
+     * DOCTOR or PATIENT: Cancel appointment.
+     */
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<AppointmentDto> cancel(@PathVariable Long id) {
+        AppointmentDto updated = appointmentService.updateStatus(id, AppointmentStatus.CANCELED);
+        return ResponseEntity.ok(updated);
     }
+
+    /**
+     * DOCTOR: Mark appointment as completed.
+     */
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<AppointmentDto> complete(@PathVariable Long id) {
+        AppointmentDto updated = appointmentService.updateStatus(id, AppointmentStatus.COMPLETED);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * DOCTOR: List appointments for the logged-in doctor.
+     */
+    @GetMapping("/doctor")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<Page<AppointmentDto>> getDoctorAppointments(
+            @RequestParam int page,
+            @RequestParam int size,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        Long userId = userService.findByEmail(email).getId();
+        Page<AppointmentDto> appointments = appointmentService.getAppointmentsForDoctor(
+                userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(appointments);
+    }
+    /**
+     * PATIENT: List appointments for the logged-in patient.
+     */
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<Page<AppointmentDto>> getPatientAppointments(
+            @RequestParam int page,
+            @RequestParam int size,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        Long userId = userService.findByEmail(email).getId();
+        Page<AppointmentDto> appointments = appointmentService.getAppointmentsForPatient(
+                userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(appointments);
+    }
+
+    /**
+     * PATIENT: List appointments history of who had booked appointment.
+     */
+
+    @GetMapping("/my/history")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<Page<AppointmentDto>> getPatientHistoryAppointments(
+            @RequestParam int page,
+            @RequestParam int size,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        Long userId = userService.findByEmail(email).getId();
+        Page<AppointmentDto> appointments = appointmentService.getAppointmentsForPatient(
+                userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(appointments);
+    }
+
 }

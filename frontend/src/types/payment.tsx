@@ -13,12 +13,12 @@ export interface PaymentDto {
   paymentStatus: string;
   paymentMethod: string;
   paidAt: string | null;
-  doctorName: string;
+  patientName: string;
 }
 
 export interface Appointment {
   id: number;
-  doctorName: string;
+  patientName: string;
   dateTime: string;
   amount: number;
   doctorSpecialty?: string;

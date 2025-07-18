@@ -12,6 +12,8 @@ public class DoctorDto {
     private String specializationName;
     private Long hospitalId;
     private String hospitalName;
+    private Long userId;
+    private String userEmail;
     private String status;
     private int totalFeedbacks;    
     private double averageRating;
