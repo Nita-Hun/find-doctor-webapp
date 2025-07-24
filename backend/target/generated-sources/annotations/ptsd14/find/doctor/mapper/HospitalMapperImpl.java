@@ -7,7 +7,7 @@ import ptsd14.find.doctor.model.Hospital;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-24T21:16:11+0700",
+    date = "2025-07-24T21:26:45+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
