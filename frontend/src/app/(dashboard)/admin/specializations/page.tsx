@@ -220,6 +220,7 @@ export default function SpecializationsPage() {
               <thead className="bg-blue-600 hidden md:table-header-group">
                 <tr className="transition-colors duration-150">
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Icon</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Created At</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Last Updated</th>
@@ -238,16 +239,30 @@ export default function SpecializationsPage() {
                       <span className="font-medium text-gray-500 md:hidden">ID</span>
                       <span className="text-gray-800">#{spec.id}</span>
                     </td>
-                    
+
+                    {/* Icon */}
+                    <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
+                      <span className="font-medium text-gray-500 md:hidden">Icon</span>
+                      {spec.iconUrl ? (
+                        <img
+                          src={spec.iconUrl}
+                          alt={`${spec.name} icon`}
+                          className="h-10 w-10 rounded-full object-cover border border-gray-300"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = '/default-icon.png';
+                          }}
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                          {spec.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </td>
+
                     {/* Name */}
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Name</span>
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
-                          <span className="text-blue-600 font-semibold">
-                            {spec.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
                         <span className="text-gray-800 font-medium">{spec.name}</span>
                       </div>
                     </td>

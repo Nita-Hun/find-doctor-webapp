@@ -1,162 +1,144 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
-import { AppointmentDto } from "@/types/Appointment";
-import { apiClient } from "@/lib/api-client";
-import { CalendarDaysIcon, ClipboardListIcon } from "lucide-react";
 import toast from "react-hot-toast";
-
-interface PagedResponse<T> {
-  content: T[];
-  page: {
-    totalPages: number;
-  };
-}
-
-const statusColors: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  CONFIRMED: "bg-blue-100 text-blue-800 border-blue-300",
-  CANCELED: "bg-red-100 text-red-800 border-red-300",
-  COMPLETED: "bg-green-100 text-green-800 border-green-300",
-};
-
-function formatDate(dateTimeString: string): string {
-  const date = new Date(dateTimeString);
-  return date.toLocaleString("en-US", {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { apiClient } from "@/lib/api-client";
+import { AppointmentDto } from "@/types/Appointment";
+import { format } from "date-fns";
+import FeedbackFormModal from "./FeedbackFormModal";
 
 export default function HistoryAppointments() {
   const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDto | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(6);
-  const [totalPages, setTotalPages] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [currentPage]);
-
-  async function fetchAppointments() {
-    setIsLoading(true);
+  async function fetchAppointments(page: number) {
+    setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<PagedResponse<AppointmentDto>>("/api/appointments/my/history", {
+      const res = await apiClient.get("/api/appointments/my/history", {
         params: {
-          page: currentPage - 1,
+          page: page - 1, // API is zero-based
           size: pageSize,
         },
       });
-      const completed = res.data.content.filter((a) => a.status === "COMPLETED");
-      setAppointments(completed);
+
+      const fetched: AppointmentDto[] = res.data.content;
+      setAppointments(fetched);
       setTotalPages(res.data.page.totalPages);
-      if (completed.length === 0 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
+
+      // Show toast for feedbacks already given in current page
+      const completedWithFeedback = fetched.filter(
+        (a) => a.status === "COMPLETED" && a.feedbackGiven
+      );
+      if (completedWithFeedback.length > 0) {
+        toast.success(`${completedWithFeedback.length} feedback(s) already submitted`);
       }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load appointment history.");
-      toast.error("Failed to load history.");
+    } catch {
+      setError("Failed to load appointments");
+      toast.error("Failed to load appointments");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
-  if (appointments.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4 bg-gray-50 rounded-lg">
-        <CalendarDaysIcon className="w-12 h-12 text-gray-400" />
-        <p className="text-gray-500 text-lg">No completed appointments yet</p>
-        <p className="text-gray-400 text-sm">You will see completed appointments here</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchAppointments(currentPage);
+  }, [currentPage]);
+
+  const handleGiveFeedback = (appointment: AppointmentDto) => {
+    setSelectedAppointment(appointment);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {appointments.map((appointment) => (
-          <div
-            key={appointment.id}
-            className="border rounded-xl overflow-hidden shadow-sm bg-white"
-          >
-            <div className="p-5">
-              <div className="flex justify-between items-start gap-3">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
-                  {appointment.doctorName || "N/A"}
-                </h3>
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full border ${
-                    statusColors[appointment.status]
-                  }`}
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Appointment History</h1>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : error ? (
+        <div className="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">{error}</div>
+      ) : appointments.filter((a) => a.status === "COMPLETED").length === 0 ? (
+        <p>No completed appointments found.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {appointments
+              .filter((appointment) => appointment.status === "COMPLETED")
+              .map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="border rounded-xl overflow-hidden shadow-sm bg-white"
                 >
-                  {appointment.status}
-                </span>
-              </div>
+                  <div className="p-5">
+                    <p className="text-lg font-semibold text-gray-800 mb-2">
+                      {appointment.appointmentTypeName}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Doctor: {appointment.doctorName || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Date & Time: {format(new Date(appointment.dateTime), "PPpp")}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Status:{" "}
+                      <span className="text-green-600 font-medium">{appointment.status}</span>
+                    </p>
 
-              <div className="mt-4 space-y-2 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <CalendarDaysIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{formatDate(appointment.dateTime)}</span>
-                </div>
-                <div className="flex items-center">
-                  <ClipboardListIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span>{appointment.appointmentTypeName || "Checkup"}</span>
-                </div>
-
-                {appointment.doctorHospitalName && (
-                  <div className="flex items-start text-gray-600">
-                    <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span>{appointment.doctorHospitalName}</span>
+                    {appointment.feedbackGiven ? (
+                      <p className="text-sm text-green-600 mt-3">Feedback submitted</p>
+                    ) : (
+                      <button
+                        onClick={() => handleGiveFeedback(appointment)}
+                        className="mt-4 inline-block px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                      >
+                        Give Feedback
+                      </button>
+                    )}
                   </div>
-                )}
-
-                {appointment.doctorHospitalPhone && (
-                  <div className="flex items-start text-gray-600">
-                    <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    <span>{appointment.doctorHospitalPhone}</span>
-                  </div>
-                )}
-
-              </div>
-            </div>
+                </div>
+              ))}
           </div>
-        ))}
-      </div>
 
-      {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex items-center justify-between max-w-md mx-auto">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {selectedAppointment && (
+        <FeedbackFormModal
+          feedback={null}
+          appointments={[selectedAppointment]}
+          onClose={() => setSelectedAppointment(null)}
+          onSuccess={() => {
+            setSelectedAppointment(null);
+            fetchAppointments(currentPage); // refresh current page after feedback
+          }}
+        />
       )}
     </div>
   );

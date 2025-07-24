@@ -30,9 +30,9 @@ export default function PublicNavbar() {
               <div className="hidden md:flex gap-6">
                 {[
                   { name: 'Home', href: '/' },
-                  { name: 'Specializations', href: '/specializations' },
-                  { name: 'About', href: '/about' },
-                  { name: 'Contact', href: '/contact' },
+                  { name: 'Specializations', href: '/public/specializations' },
+                  { name: 'About', href: '/public/about' },
+                  { name: 'Contact', href: '/public/contact' },
                 ].map((item) => (
                   <Link
                     key={item.name}
@@ -92,7 +92,7 @@ export default function PublicNavbar() {
                 {[
                   { name: 'Home', href: '/' },
                   { name: 'Specializations', href: '/specializations' },
-                  { name: 'About', href: '/about' },
+                  { name: 'About', href: '/public/about' },
                   { name: 'Contact', href: '/contact' },
                 ].map((item) => (
                   <Link

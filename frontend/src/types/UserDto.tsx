@@ -33,4 +33,9 @@ export const roleColors: Record<string, string> = {
   DOCTOR: "bg-green-100 text-green-800",
 };
 
+export interface UserSimple {
+  id: number;
+  email: string;
+}
+
 

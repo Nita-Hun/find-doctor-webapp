@@ -46,6 +46,10 @@ public class SpecializationService {
 
         Specialization specialization = specializationMapper.toEntity(dto);
         specialization.setId(null); // Ensure new entity
+
+        if (dto.getIconUrl() != null) {
+        specialization.setIconUrl(dto.getIconUrl());
+    }
         Specialization saved = specializationRepository.save(specialization);
         return specializationMapper.toDto(saved);
     }
@@ -72,6 +76,10 @@ public class SpecializationService {
             validateNameUniqueness(dto.getName(), id);
             existing.setName(dto.getName());
         }
+
+        if (dto.getIconUrl() != null) {
+        existing.setIconUrl(dto.getIconUrl());
+    }
 
         Specialization updatedSpecialization = specializationRepository.save(existing);
         return specializationMapper.toDto(updatedSpecialization);

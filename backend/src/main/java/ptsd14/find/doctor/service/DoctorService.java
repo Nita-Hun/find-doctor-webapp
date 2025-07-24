@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ptsd14.find.doctor.dto.DoctorDashboardDto;
 import ptsd14.find.doctor.dto.DoctorDto;
+import ptsd14.find.doctor.dto.FeedbackDto.FeedbackSummaryDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.DoctorMapper;
 import ptsd14.find.doctor.model.Doctor;
@@ -244,6 +245,17 @@ public class DoctorService {
         .limit(limit)
         .toList();
     }
+
+    @Transactional(readOnly = true)
+    public FeedbackSummaryDto getFeedbackSummary() {
+    Double avgRating = feedbackRepository.findAverageRatingAllDoctors();
+    if (avgRating == null) avgRating = 0.0;
+
+    Integer ratingCount = feedbackRepository.countAllRatings();
+    if (ratingCount == null) ratingCount = 0;
+
+    return new FeedbackSummaryDto(avgRating, ratingCount);
+}
 
 
     

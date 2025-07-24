@@ -15,3 +15,10 @@ export interface AppointmentTypeDto {
   updatedAt?: string;
 }
 
+export type AppointmentTypeOption = {
+  id: number;
+  name: string;
+  price: number;
+  duration: number;
+};
+

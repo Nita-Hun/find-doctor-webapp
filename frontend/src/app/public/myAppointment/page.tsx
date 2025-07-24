@@ -1,5 +1,5 @@
 "use client";
-import HistoryAppointmentTab from "@/components/HistoryAppointmentTab";
+
 import UpcomingAppointmentTabs from "@/components/UpcomingAppointmentTab";
 
 export default function PatientAppointmentsPage() {

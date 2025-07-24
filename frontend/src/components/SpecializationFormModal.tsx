@@ -18,7 +18,8 @@ export default function SpecializationFormModal({
   onSuccess 
 }: SpecializationFormModalProps) {
   const [formData, setFormData] = useState({
-    name: specialization?.name || ''
+    name: specialization?.name || '',
+    iconUrl: specialization?.iconUrl || '',  // <-- Add iconUrl here
   });
   const [isNameUnique, setIsNameUnique] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
@@ -26,24 +27,26 @@ export default function SpecializationFormModal({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (specialization) {
-      setFormData({
-        name: specialization.name,
-      });
-    }
+    setErrors({});
+    setIsNameUnique(true);
+    setFormData({
+      name: specialization?.name || '',
+      iconUrl: specialization?.iconUrl || '',  // <-- reset iconUrl on specialization change
+    });
   }, [specialization]);
 
   const checkNameUniqueness = async () => {
-    if (!formData.name.trim()) {
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
       setIsNameUnique(true);
       return;
     }
 
     setIsChecking(true);
     try {
-      const response = await apiClient.get('/api/specializations/check-name', {
+      const response = await apiClient.get<{ isUnique: boolean }>('/api/specializations/check-name', {
         params: {
-          name: formData.name.trim(),
+          name: trimmedName,
           excludeId: specialization?.id
         }
       });
@@ -64,7 +67,7 @@ export default function SpecializationFormModal({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (name === 'name') {
       setIsNameUnique(true);
       setErrors(prev => ({ ...prev, name: '' }));
@@ -73,11 +76,17 @@ export default function SpecializationFormModal({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) {
+    const trimmedName = formData.name.trim();
+
+    if (!trimmedName) {
       newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 3) {
+    } else if (trimmedName.length < 3) {
       newErrors.name = 'Name must be at least 3 characters';
+    }
+
+    // Optional: Validate iconUrl is a valid URL if it's not empty
+    if (formData.iconUrl && !/^https?:\/\/.+/.test(formData.iconUrl.trim())) {
+      newErrors.iconUrl = 'Icon URL must be a valid URL starting with http or https';
     }
     
     setErrors(newErrors);
@@ -86,7 +95,7 @@ export default function SpecializationFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
     if (!isNameUnique && !isChecking) {
       await checkNameUniqueness();
@@ -96,13 +105,16 @@ export default function SpecializationFormModal({
 
     setLoading(true);
     try {
+      const payload = { 
+        ...formData, 
+        name: formData.name.trim(), 
+        iconUrl: formData.iconUrl.trim() || null,  // trim and allow null if empty
+      };
       if (specialization) {
-        // Update existing specialization
-        await apiClient.put(`/api/specializations/${specialization.id}`, formData);
+        await apiClient.put(`/api/specializations/${specialization.id}`, payload);
         toast.success('Specialization updated successfully');
       } else {
-        // Create new specialization
-        await apiClient.post('/api/specializations', formData);
+        await apiClient.post('/api/specializations', payload);
         toast.success('Specialization created successfully');
       }
       onSuccess();
@@ -157,7 +169,28 @@ export default function SpecializationFormModal({
             )}
           </div>
 
-          {/* Created At Field (display only for existing specializations) */}
+          {/* Icon URL Field */}
+          <div>
+            <label htmlFor="iconUrl" className="block font-medium mb-1">
+              Icon URL (optional) <span className="text-red-600">*</span>
+            </label>
+            <input
+              type="url"
+              id="iconUrl"
+              name="iconUrl"
+              value={formData.iconUrl}
+              onChange={handleChange}
+              placeholder="https://example.com/icon.png"
+              className={`w-full border ${
+                errors.iconUrl ? 'border-red-500' : 'border-gray-300'
+              } rounded px-3 py-2`}
+            />
+            {errors.iconUrl && (
+              <p className="text-red-500 text-xs mt-1">{errors.iconUrl}</p>
+            )}
+          </div>
+
+          {/* Created At Field (display only for existing specializations)
           {specialization?.createdAt && (
             <div>
               <label className="block font-medium mb-1">Created At</label>
@@ -165,7 +198,7 @@ export default function SpecializationFormModal({
                 {new Date(specialization.createdAt).toLocaleString()}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Buttons */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

@@ -4,7 +4,6 @@
 import Logo from '@/components/Logo';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@components/Topbar';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function DashboardLayout({

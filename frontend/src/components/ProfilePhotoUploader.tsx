@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
+import { apiClient } from "@/lib/api-client";
 
 export default function ProfilePhotoUploader({ onUploadSuccess }: { onUploadSuccess: () => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -26,8 +26,8 @@ export default function ProfilePhotoUploader({ onUploadSuccess }: { onUploadSucc
     formData.append("file", file);
 
     try {
-      await axios.post(
-        "http://localhost:8080/api/auth/users/upload-profile-photo",
+      await apiClient.post(
+        "/api/auth/users/upload-profile-photo",
         formData,
         {
           headers: {

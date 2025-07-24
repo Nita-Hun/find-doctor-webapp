@@ -5,63 +5,63 @@ import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
 import { FeedbackFormModalProps } from '@/types/Feedback';
-import { AppointmentDto } from '@/types/Appointment';
+import { Star } from 'lucide-react';
 
 export default function FeedbackFormModal({
   feedback,
   appointments,
   onClose,
-  onSuccess
-}: FeedbackFormModalProps & { appointments: AppointmentDto[] }) {
+  onSuccess,
+}: FeedbackFormModalProps) {
   const [formData, setFormData] = useState({
     rating: feedback?.rating || 5,
     comment: feedback?.comment || '',
-    appointmentId: feedback?.appointmentId || (appointments.length > 0 ? appointments[0].id : 0)
+    appointmentId: feedback?.appointmentId || (appointments[0]?.id || 0),
   });
 
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [appointmentOptions, setAppointmentOptions] = useState<{ id: number; label: string }[]>([]);
+  const [appointmentOptions, setAppointmentOptions] = useState<
+    { id: number; label: string }[]
+  >([]);
 
   useEffect(() => {
-    // Initialize default appointment if none selected
-    if (appointments.length > 0 && formData.appointmentId === 0) {
-      setFormData(prev => ({ ...prev, appointmentId: appointments[0].id }));
-    }
-
-    // Map appointment options
-    const options = appointments.map(appt => {
+    const options = appointments.map((appt) => {
       const doctor = appt.doctorName || 'Unknown Doctor';
       const type = appt.appointmentTypeName || 'Appointment';
       const dateObj = new Date(appt.dateTime);
       const date = dateObj.toLocaleDateString();
-      const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+      const time = dateObj.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
       return {
         id: appt.id,
-        label: `${doctor} — ${type} on ${date} at ${time}`
+        label: `${doctor} — ${type} on ${date} at ${time}`,
       };
     });
-
     setAppointmentOptions(options);
-  }, [appointments, formData.appointmentId]);
+  }, [appointments]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: field === 'rating' || field === 'appointmentId' ? parseInt(value) : value
+      [field]:
+        field === 'rating' || field === 'appointmentId'
+          ? Number(value)
+          : value,
     }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
+    setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (formData.rating < 1 || formData.rating > 5) newErrors.rating = 'Rating must be between 1-5';
+    if (!formData.rating || formData.rating < 1 || formData.rating > 5)
+      newErrors.rating = 'Rating must be between 1–5';
     if (!formData.comment.trim()) newErrors.comment = 'Comment is required';
-    if (!formData.appointmentId) newErrors.appointmentId = 'Appointment is required';
-
+    if (!formData.appointmentId)
+      newErrors.appointmentId = 'Appointment selection is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,151 +69,166 @@ export default function FeedbackFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setLoading(true);
     try {
       if (feedback?.id) {
         await apiClient.put(`/api/feedbacks/${feedback.id}`, formData);
-        toast.success('Feedback updated successfully');
+        toast.success('Feedback updated!');
       } else {
         await apiClient.post('/api/feedbacks', formData);
-        toast.success('Feedback created successfully');
+        toast.success('Feedback submitted!');
       }
       onSuccess();
-    } catch (error) {
-      console.error('Error saving feedback:', error);
-      toast.error('Failed to save feedback');
+    } catch (error: any) {
+      console.error(error);
+      if (
+        error?.response?.data?.message?.includes(
+          'Feedback already exists'
+        )
+      ) {
+        toast.error(
+          'You have already submitted feedback for this appointment.'
+        );
+      } else {
+        toast.error('You have already submitted feedback for this appointment.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const renderStars = (rating: number) => {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
-  };
+  const StarRating = () => (
+    <div className="flex space-x-1 mb-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          type="button"
+          key={star}
+          onClick={() => handleInputChange('rating', star)}
+          onMouseEnter={() => setHoverRating(star)}
+          onMouseLeave={() => setHoverRating(null)}
+          className="text-yellow-400 hover:scale-110 transition-transform"
+          aria-label={`${star} star${star > 1 ? 's' : ''}`}
+        >
+          <Star
+            fill={
+              hoverRating !== null
+                ? star <= hoverRating
+                  ? '#facc15'
+                  : 'none'
+                : star <= formData.rating
+                ? '#facc15'
+                : 'none'
+            }
+            stroke="#facc15"
+            className="w-6 h-6"
+          />
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
-        <div className="flex justify-between items-center border-b pb-4 mb-4">
-          <h2 className="text-xl font-semibold">
-            {feedback?.id ? 'Edit Feedback' : 'Add New Feedback'}
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6 animate-fadeIn relative">
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h3 className="text-lg font-semibold">
+            {feedback?.id ? 'Edit Feedback' : 'Leave Your Feedback'}
+          </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-800"
             disabled={loading}
+            aria-label="Close feedback form"
           >
-            <FiX size={24} />
+            <FiX size={22} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-          {/* Rating Field */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Rating */}
           <div>
-            <label htmlFor="rating" className="block font-medium mb-1">
-              Rating <span className="text-red-600">*</span>
+            <label className="block font-medium text-sm mb-1">
+              Rating <span className="text-red-500">*</span>
             </label>
-            <select
-              id="rating"
-              value={formData.rating}
-              onChange={(e) => handleInputChange('rating', e.target.value)}
-              className={`w-full border ${errors.rating ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2`}
-              required
-            >
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <option key={rating} value={rating}>
-                  {renderStars(rating)} ({rating}/5)
-                </option>
-              ))}
-            </select>
+            <StarRating />
             {errors.rating && (
-              <p className="text-red-500 text-xs mt-1">{errors.rating}</p>
+              <p className="text-red-500 text-xs">{errors.rating}</p>
             )}
           </div>
 
-          {/* Appointment Field */}
+          {/* Appointment */}
           <div>
-            <label htmlFor="appointment" className="block font-medium mb-1">
-              Appointment <span className="text-red-600">*</span>
+            <label
+              htmlFor="appointmentId"
+              className="block font-medium text-sm mb-1"
+            >
+              Appointment <span className="text-red-500">*</span>
             </label>
             <select
-              id="appointment"
+              id="appointmentId"
               value={formData.appointmentId}
               onChange={(e) => handleInputChange('appointmentId', e.target.value)}
-              className={`w-full border ${errors.appointmentId ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2`}
-              required
+              disabled={appointmentOptions.length === 1}
+              className={`w-full border rounded-md px-3 py-2 text-sm ${
+                errors.appointmentId ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              {appointmentOptions.map((appt) => (
-                <option key={appt.id} value={appt.id}>
-                  {appt.label}
+              {appointmentOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
                 </option>
               ))}
             </select>
             {errors.appointmentId && (
-              <p className="text-red-500 text-xs mt-1">{errors.appointmentId}</p>
+              <p className="text-red-500 text-xs">{errors.appointmentId}</p>
             )}
           </div>
 
-          {/* Comment Field */}
+          {/* Comment */}
           <div>
-            <label htmlFor="comment" className="block font-medium mb-1">
-              Comment <span className="text-red-600">*</span>
+            <label
+              htmlFor="comment"
+              className="block font-medium text-sm mb-1"
+            >
+              Comment <span className="text-red-500">*</span>
             </label>
             <textarea
               id="comment"
+              rows={4}
+              placeholder="Share your thoughts..."
               value={formData.comment}
               onChange={(e) => handleInputChange('comment', e.target.value)}
-              rows={4}
-              className={`w-full border ${errors.comment ? 'border-red-500' : 'border-gray-300'} rounded px-3 py-2`}
-              placeholder="Share your feedback about the appointment..."
-              required
+              className={`w-full border rounded-md px-3 py-2 text-sm ${
+                errors.comment ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
             {errors.comment && (
-              <p className="text-red-500 text-xs mt-1">{errors.comment}</p>
+              <p className="text-red-500 text-xs">{errors.comment}</p>
             )}
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-3 border-t mt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-sm"
             >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  {feedback?.id ? 'Updating...' : 'Submitting...'}
-                </span>
-              ) : feedback?.id ? 'Update Feedback' : 'Submit'}
+              {loading
+                ? feedback?.id
+                  ? 'Updating...'
+                  : 'Submitting...'
+                : feedback?.id
+                ? 'Update'
+                : 'Submit'}
             </button>
           </div>
         </form>

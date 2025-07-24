@@ -10,6 +10,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import ptsd14.find.doctor.dto.FeedbackDto;
+import ptsd14.find.doctor.dto.FeedbackDto.FeedbackSummaryDto;
+import ptsd14.find.doctor.service.DoctorService;
 import ptsd14.find.doctor.service.FeedbackService;
 
 @RestController
@@ -19,9 +21,10 @@ import ptsd14.find.doctor.service.FeedbackService;
 public class FeedbackController {
 
     private final FeedbackService feedbackService;
+    private final DoctorService doctorService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
     public ResponseEntity<Page<FeedbackDto>> getAll(
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
@@ -30,7 +33,7 @@ public class FeedbackController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "rating"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<FeedbackDto> feedbacksPage = feedbackService.getAll(pageable, search, rating);
 
         return ResponseEntity.ok(feedbacksPage);
@@ -45,7 +48,7 @@ public class FeedbackController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<FeedbackDto> create(@RequestBody FeedbackDto dto) {
         return ResponseEntity.ok(feedbackService.create(dto));
     }
@@ -62,4 +65,11 @@ public class FeedbackController {
         feedbackService.delete(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/summary")
+    public FeedbackSummaryDto getFeedbackSummary() {
+        return doctorService.getFeedbackSummary();
+    }
+
+
+    
 }

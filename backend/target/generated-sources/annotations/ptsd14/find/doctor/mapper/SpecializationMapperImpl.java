@@ -7,7 +7,7 @@ import ptsd14.find.doctor.model.Specialization;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-07-18T17:33:48+0700",
+    date = "2025-07-24T21:16:11+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.50.v20250628-1110, environment: Java 21.0.7 (Eclipse Adoptium)"
 )
 @Component
@@ -22,6 +22,7 @@ public class SpecializationMapperImpl implements SpecializationMapper {
         SpecializationDto specializationDto = new SpecializationDto();
 
         specializationDto.setCreatedAt( entity.getCreatedAt() );
+        specializationDto.setIconUrl( entity.getIconUrl() );
         specializationDto.setId( entity.getId() );
         specializationDto.setName( entity.getName() );
         specializationDto.setUpdatedAt( entity.getUpdatedAt() );
@@ -38,6 +39,7 @@ public class SpecializationMapperImpl implements SpecializationMapper {
         Specialization specialization = new Specialization();
 
         specialization.setCreatedAt( dto.getCreatedAt() );
+        specialization.setIconUrl( dto.getIconUrl() );
         specialization.setId( dto.getId() );
         specialization.setName( dto.getName() );
         specialization.setUpdatedAt( dto.getUpdatedAt() );
@@ -51,6 +53,9 @@ public class SpecializationMapperImpl implements SpecializationMapper {
             return;
         }
 
+        if ( dto.getIconUrl() != null ) {
+            entity.setIconUrl( dto.getIconUrl() );
+        }
         if ( dto.getName() != null ) {
             entity.setName( dto.getName() );
         }

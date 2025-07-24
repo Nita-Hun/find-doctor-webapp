@@ -22,6 +22,7 @@ public class AppointmentDto {
     private String status;
     private BigDecimal amount;
     private String paymentStatus;
+    private boolean feedbackGiven;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

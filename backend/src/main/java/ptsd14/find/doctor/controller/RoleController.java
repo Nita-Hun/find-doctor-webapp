@@ -30,7 +30,7 @@ public class RoleController {
             @RequestParam(required = false) String search
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
-        PageRequest pageable = PageRequest.of(pageNumber, size, Sort.by("name"));
+        PageRequest pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC,"id"));
         Page<RoleDto> roles = roleService.getAllRoles(pageable);
         return ResponseEntity.ok(roles);
     }

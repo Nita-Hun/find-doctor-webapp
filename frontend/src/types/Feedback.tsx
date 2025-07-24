@@ -12,6 +12,8 @@ export interface Feedback {
 }
 
 export interface Appointment {
+  appointmentTypeName: string;
+  dateTime: string | number | Date;
   id: number;
   doctor?: {
     id: number;
@@ -23,7 +25,7 @@ export interface Appointment {
 
 export interface FeedbackFormModalProps {
   feedback: Feedback | null;
-  appointments: AppointmentDto[];
+  appointments: (AppointmentDto | Appointment)[];
   onClose: () => void;
   onSuccess: () => void;
 }

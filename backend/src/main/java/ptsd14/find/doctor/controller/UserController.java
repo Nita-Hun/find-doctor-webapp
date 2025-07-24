@@ -30,7 +30,7 @@ public class UserController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "email"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
 
         Page<UserDto> usersPage = userService.getAll(pageable, search, role);
 

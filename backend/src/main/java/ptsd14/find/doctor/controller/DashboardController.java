@@ -21,16 +21,20 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     @GetMapping("/counts")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Map<String, Long> getCounts() {
-        DashboardStatsDto stats = dashboardService.getDashboardStats();
-        Map<String, Long> counts = new HashMap<>();
-        counts.put("doctors", stats.getDoctorCount());
-        counts.put("patients", stats.getPatientCount());
-        counts.put("appointments", stats.getAppointmentCount());
-        counts.put("specializations", stats.getSpecializationCount());
-        return counts;
-    }
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Map<String, Long>> getCounts() {
+    DashboardStatsDto stats = dashboardService.getDashboardStats();
+    Map<String, Long> counts = new HashMap<>();
+    counts.put("doctors", stats.getDoctorCount());
+    counts.put("patients", stats.getPatientCount());
+    counts.put("appointments", stats.getAppointmentCount());
+    counts.put("specializations", stats.getSpecializationCount());
+
+    return ResponseEntity.ok()
+            .header("Cache-Control", "private, max-age=60") // cache for 60 seconds
+            .body(counts);
+}
+
 
     @GetMapping("/revenue")
     @PreAuthorize("hasRole('ADMIN')")

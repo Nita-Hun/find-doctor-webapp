@@ -23,6 +23,8 @@ public class Specialization {
     @Column(nullable = false)
     private String name;
 
+    private String iconUrl;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

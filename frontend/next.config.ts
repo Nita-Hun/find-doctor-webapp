@@ -11,6 +11,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/admin/dashboards",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, max-age=60, stale-while-revalidate=30",
+          },
+        ],
+      },
+      // Optional: add other routes here if needed
+    ];
+  },
 };
 
 export default nextConfig;

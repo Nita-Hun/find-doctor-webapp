@@ -34,16 +34,34 @@ public class AppointmentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search
     ) {
-        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "doctorFirstname"));
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<AppointmentDto> appointmentsPage = appointmentService.getAll(pageable, search);
         return ResponseEntity.ok(appointmentsPage);
+    }
+
+     /**
+     * PATIENT: List appointments history of who had booked appointment.
+     */
+
+    @GetMapping("/my/history")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<Page<AppointmentDto>> getPatientHistoryAppointments(
+            @RequestParam int page,
+            @RequestParam int size,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        Long userId = userService.findByEmail(email).getId();
+        Page<AppointmentDto> appointments = appointmentService.getAppointmentsForPatient(
+                userId, PageRequest.of(page, size));
+        return ResponseEntity.ok(appointments);
     }
 
     /**
      * ADMIN: Get a single appointment by ID.
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<AppointmentDto> getById(@PathVariable Long id) {
         return appointmentService.getById(id)
                 .map(ResponseEntity::ok)
@@ -170,22 +188,8 @@ public class AppointmentController {
         return ResponseEntity.ok(appointments);
     }
 
-    /**
-     * PATIENT: List appointments history of who had booked appointment.
-     */
+   
 
-    @GetMapping("/my/history")
-    @PreAuthorize("hasRole('PATIENT')")
-    public ResponseEntity<Page<AppointmentDto>> getPatientHistoryAppointments(
-            @RequestParam int page,
-            @RequestParam int size,
-            Authentication authentication
-    ) {
-        String email = authentication.getName();
-        Long userId = userService.findByEmail(email).getId();
-        Page<AppointmentDto> appointments = appointmentService.getAppointmentsForPatient(
-                userId, PageRequest.of(page, size));
-        return ResponseEntity.ok(appointments);
-    }
+    
 
 }

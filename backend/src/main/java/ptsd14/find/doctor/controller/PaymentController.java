@@ -37,7 +37,7 @@ public class PaymentController {
         @RequestParam(required = false) String status
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
-        Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "paidAt"));
+        Pageable pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<PaymentDto> paymentsPage = paymentService.getAll(pageable, search, status);
         return ResponseEntity.ok(paymentsPage);
     }

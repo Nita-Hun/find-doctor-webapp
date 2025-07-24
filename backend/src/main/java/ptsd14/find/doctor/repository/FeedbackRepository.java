@@ -40,4 +40,12 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
         WHERE f.appointment.doctor.id = :doctorId
     """)
     Integer countRatingsByDoctor(@Param("doctorId") Long doctorId);
+
+    boolean existsByAppointmentId(Long appointmentId);
+
+    @Query("SELECT AVG(f.rating) FROM Feedback f")
+    Double findAverageRatingAllDoctors();
+
+    @Query("SELECT COUNT(f) FROM Feedback f")
+    Integer countAllRatings();
 }

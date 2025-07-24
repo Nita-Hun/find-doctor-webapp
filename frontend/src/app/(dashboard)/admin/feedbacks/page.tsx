@@ -6,10 +6,11 @@ import toast from 'react-hot-toast';
 import FeedbackFormModal from '@/components/FeedbackFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
-import { Feedback, Appointment } from '@/types/Feedback';
 import { PagedResponse, PlainPagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
 import Pagination from '@/components/Pagination';
+import { Appointment, Feedback } from '@/types/Feedback';
+
 
 export default function FeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -163,7 +164,7 @@ export default function FeedbackPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Feedback Management</h1>
-        <button
+        {/* <button
           onClick={() => {
             setSelectedFeedback(null);
             setShowModal(true);
@@ -171,7 +172,7 @@ export default function FeedbackPage() {
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors text-sm"
         >
           + Add New Feedback
-        </button>
+        </button> */}
       </div>
 
       {/* Search and filter bar */}

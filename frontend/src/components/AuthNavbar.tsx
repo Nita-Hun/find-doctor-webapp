@@ -102,9 +102,9 @@ export default function AuthNavbar() {
               <div className="hidden md:flex gap-6">
                 {[
                   { name: 'Home', href: '/' },
-                  { name: 'Specializations', href: '/specializations' },
+                  { name: 'Specializations', href: '/public/specializations' },
                   { name: 'About', href: '/public/about' },
-                  { name: 'Contact', href: '/contact' },
+                  { name: 'Contact', href: '/public/contact' },
                   { name: 'My Appointments', href: '/public/myAppointment' },
                 ].map((item) => (
                   <Link

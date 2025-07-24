@@ -1,3 +1,5 @@
+import { UserSimple } from "./UserDto";
+
 export interface Doctor {
   id?: number;
   firstname: string;
@@ -26,11 +28,6 @@ export interface DoctorDto {
 
   userId?: number;    
   userEmail?: string; 
-}
-
-export interface UserSimple {
-  id: number;
-  email: string;
 }
 
 export interface DoctorFormModalProps {
@@ -69,6 +66,13 @@ export interface DoctorDashboardDto {
     date: string;
   }[];
 }
+
+export type DoctorOption = {
+  id: number;
+  name: string;
+  hospitalName?: string;
+  hospitalPhone?: string;
+};
 
 
 

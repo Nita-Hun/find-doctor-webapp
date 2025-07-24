@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ptsd14.find.doctor.dto.FeedbackDto;
+import ptsd14.find.doctor.dto.FeedbackDto.FeedbackSummaryDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.FeedbackMapper;
 import ptsd14.find.doctor.model.Appointment;
@@ -60,16 +61,24 @@ public class FeedbackService {
     }
 
     public FeedbackDto create(FeedbackDto dto) {
-        Feedback feedback = feedbackMapper.toEntity(dto);
-
-        if (dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid appointment ID"));
-            feedback.setAppointment(appointment);
-        }
-
-        return feedbackMapper.toDto(feedbackRepository.save(feedback));
+    if (dto.getAppointmentId() == null) {
+        throw new IllegalArgumentException("Appointment ID is required");
     }
+
+    Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
+            .orElseThrow(() -> new IllegalArgumentException("Invalid appointment ID"));
+
+    // Check if feedback already exists for this appointment
+    if (feedbackRepository.existsByAppointmentId(dto.getAppointmentId())) {
+        throw new IllegalStateException("Feedback already exists for this appointment.");
+    }
+
+    Feedback feedback = feedbackMapper.toEntity(dto);
+    feedback.setAppointment(appointment);
+
+    return feedbackMapper.toDto(feedbackRepository.save(feedback));
+}
+
 
     public FeedbackDto update(Long id, FeedbackDto dto) {
         Feedback feedback = feedbackRepository.findById(id)
@@ -90,4 +99,7 @@ public class FeedbackService {
     public void delete(Long id) {
         feedbackRepository.deleteById(id);
     }
+
+    
+
 }

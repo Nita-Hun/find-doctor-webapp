@@ -32,7 +32,7 @@ public class PatientController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "firstname"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
 
         Page<PatientDto> patientsPage = patientService.getAll(pageable, search, status);
 

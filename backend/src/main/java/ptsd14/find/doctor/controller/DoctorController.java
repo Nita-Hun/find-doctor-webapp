@@ -32,7 +32,7 @@ public class DoctorController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "firstname"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
 
         // Pass both search and status to the service
         Page<DoctorDto> doctorsPage = doctorService.getAll(pageable, search, status);

@@ -1,36 +1,14 @@
 "use client";
 
-import { AppointmentTypeOption, DoctorOption } from "@/types/Appointment";
-
-interface AppointmentDetailsProps {
-  doctorId: number;
-  setDoctorId: (v: number) => void;
-  appointmentTypeId: number;
-  setAppointmentTypeId: (v: number) => void;
-  dateTime: string;
-  setDateTime: (v: string) => void;
-  note: string;
-  setNote: (v: string) => void;
-  doctors: DoctorOption[];
-  appointmentTypes: AppointmentTypeOption[];
-  onNext: () => void;
-  onBack: () => void;
-  loading: boolean;
-}
+import { AppointmentDetailsProps } from "@/types/Appointment";
 
 export default function AppointmentDetailsForm({
-  doctorId,
-  setDoctorId,
-  appointmentTypeId,
-  setAppointmentTypeId,
-  dateTime,
-  setDateTime,
-  note,
-  setNote,
-  doctors,
-  appointmentTypes,
-  onNext,
-  onBack,
+  doctorId, setDoctorId,
+  appointmentTypeId, setAppointmentTypeId,
+  dateTime, setDateTime,
+  note, setNote,
+  doctors, appointmentTypes,
+  onNext, onBack,
 }: AppointmentDetailsProps) {
   return (
     <form

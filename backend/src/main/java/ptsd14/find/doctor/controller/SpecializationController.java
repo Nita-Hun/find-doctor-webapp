@@ -20,7 +20,7 @@ public class SpecializationController {
     private final SpecializationService specializationService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<SpecializationDto>> getAll(
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
@@ -28,7 +28,7 @@ public class SpecializationController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "name"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
         // Pass both search and status to the service
         Page<SpecializationDto> spcializationsPage = specializationService.getAll(pageable, search);
 
@@ -36,7 +36,7 @@ public class SpecializationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SpecializationDto> getById(@PathVariable Long id) {
         Optional<SpecializationDto> dto = specializationService.getById(id);
         return dto.map(ResponseEntity::ok)

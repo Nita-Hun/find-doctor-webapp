@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
-  AreaChart, Area, LineChart, Line
+  AreaChart, Area,
 } from 'recharts';
 import { FaUserMd, FaClinicMedical, FaRegCalendarAlt, FaChevronRight } from 'react-icons/fa';
 import { FiUsers, FiCalendar, FiDollarSign, FiClock } from 'react-icons/fi';
@@ -250,13 +250,14 @@ export default function AdminDashboard() {
   );
 }
 
+
+
 // Components
 function Header() {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-        <p className="text-gray-500 mt-1">Welcome back! Here's what's happening with your clinic today.</p>
       </div>
       <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-lg shadow-xs border border-gray-100">
         <FiClock className="text-gray-400" size={18} />

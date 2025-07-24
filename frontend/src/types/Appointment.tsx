@@ -1,3 +1,6 @@
+import { AppointmentTypeOption } from "./AppointmentType";
+import { DoctorOption } from "./DoctorDto";
+
 export interface Appointment {
   id?: number;
   doctorId: number;
@@ -10,6 +13,23 @@ export interface AppointmentFormModalProps {
   appointment?: Appointment;
   onClose: () => void;
   onSuccess: () => void;
+}
+
+//For public appointment details
+export interface AppointmentDetailsProps {
+  doctorId: number;
+  setDoctorId: (v: number) => void;
+  appointmentTypeId: number;
+  setAppointmentTypeId: (v: number) => void;
+  dateTime: string;
+  setDateTime: (v: string) => void;
+  note: string;
+  setNote: (v: string) => void;
+  doctors: DoctorOption[];
+  appointmentTypes: AppointmentTypeOption[];
+  onNext: () => void;
+  onBack: () => void;
+  loading: boolean;
 }
 
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED';
@@ -29,27 +49,17 @@ export interface AppointmentDto {
   dateTime: string;
   note?: string;
   status: AppointmentStatus;
-  paymentStatus?: string | null; 
+  paymentStatus?: string | null;
+  feedbackGiven: boolean; 
 }
 
-export type AppointmentTypeOption = {
-  id: number;
-  name: string;
-  price: number;
-  duration: number;
-};
-
+//For appointment form modal and table Admin & Doctor dashboard
 export type SelectOption = {
   id: number;
   name: string;
 };
 
-export type DoctorOption = {
-  id: number;
-  name: string;
-  hospitalName?: string;
-  hospitalPhone?: string;
-};
+
 
 
 

@@ -1,35 +1,15 @@
 "use client";
 
-interface PatientInfoFormProps {
-  firstname: string;
-  setFirstname: (v: string) => void;
-  lastname: string;
-  setLastname: (v: string) => void;
-  email: string;
-  setEmail: (v: string) => void;
-  dateOfBirth: string;
-  setDateOfBirth: (v: string) => void;
-  gender: string;
-  setGender: (v: string) => void;
-  address: string;
-  setAddress: (v: string) => void;
-  onNext: () => void;
-}
+import { PatientInfoFormProps } from "@/types/Patient";
 
 export default function PatientInfoForm(props: PatientInfoFormProps) {
   const {
-    firstname,
-    setFirstname,
-    lastname,
-    setLastname,
-    email,
-    setEmail,
-    dateOfBirth,
-    setDateOfBirth,
-    gender,
-    setGender,
-    address,
-    setAddress,
+    firstname, setFirstname,
+    lastname, setLastname,
+    email, setEmail,
+    dateOfBirth, setDateOfBirth,
+    gender, setGender,
+    address, setAddress,
     onNext,
   } = props;
 
@@ -99,13 +79,16 @@ export default function PatientInfoForm(props: PatientInfoFormProps) {
       </div>
       <div className="md:col-span-2">
         <label className="block text-sm font-medium mb-1">Address</label>
-        <input
-          type="text"
-          required
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className="w-full border rounded p-2"
-        />
+        <div className="md:col-span-2">
+          <textarea
+            required
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full border rounded p-2 h-24 resize-none"
+            placeholder="Enter your full address"
+          />
+        </div>
+
       </div>
       <div className="md:col-span-2 flex justify-end space-x-2 mt-4">
         <button

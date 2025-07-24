@@ -31,7 +31,7 @@ public class AppointmentTypeController {
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
-        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.ASC, "name"));
+        var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<AppointmentTypeDto> appointmentTypesPage = appointmentTypeService.getAll(pageable, search);
 
         return ResponseEntity.ok(appointmentTypesPage);

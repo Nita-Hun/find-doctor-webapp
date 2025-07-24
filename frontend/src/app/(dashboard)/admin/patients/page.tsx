@@ -10,7 +10,8 @@ import Pagination from '@/components/Pagination';
 import { PatientDto } from '@/types/Patient';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
-import { UserSimple } from '@/types/DoctorDto';
+import { UserSimple } from '@/types/UserDto';
+
 
 const statusOptions = [
   { value: '', label: 'All Statuses' },

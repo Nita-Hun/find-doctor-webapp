@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
 
-import { AppointmentTypeOption, DoctorOption } from "@/types/Appointment";
+
 import AppointmentDetailsForm from "@/components/AppointmentDetailsForm";
 import PaymentForm from "@/components/PaymentForm";
 import PatientInfoForm from "@/components/PatientInfoForm";
+import { DoctorOption } from "@/types/DoctorDto";
+import { AppointmentTypeOption } from "@/types/AppointmentType";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -84,7 +86,7 @@ export default function RegisterPage() {
     try {
       let patientId: number;
 
-      // Try to get existing patient id from /api/patients/my
+      // get existing patient id from /api/patients/my
       try {
         const existingPatientRes = await apiClient.get("/api/patients/my");
         patientId = existingPatientRes.data.id;

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
-import { AppointmentFormModalProps, AppointmentTypeOption, SelectOption } from "@/types/Appointment";
+import { AppointmentFormModalProps, SelectOption } from "@/types/Appointment";
 import { FiX } from "react-icons/fi";
 import { useUserRole } from "@/hooks/useUserRole";
+import { AppointmentTypeOption } from "@/types/AppointmentType";
 
 
 export default function AppointmentFormModal({
@@ -147,7 +148,7 @@ export default function AppointmentFormModal({
     }
   };
 
-  // ✅ If not admin, block access
+  // If not admin, block access
   if (role !== "ADMIN") {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

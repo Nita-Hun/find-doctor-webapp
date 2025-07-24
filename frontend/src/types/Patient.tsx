@@ -1,3 +1,5 @@
+import { UserSimple } from "./UserDto";
+
 export interface PatientDto {
   id: number;
   firstname: string;
@@ -11,11 +13,6 @@ export interface PatientDto {
 
   userId?: number;    
   userEmail?: string;
-}
-
-export interface UserSimple {
-  id: number;
-  email: string;
 }
 
 export interface Patient {
@@ -33,10 +30,28 @@ export interface Patient {
   userEmail?: string;
 }
 
+//For patient form modal
 export interface PatientFormModalProps {
   patient?: PatientDto | null;
   users?: UserSimple[]; 
   onClose: () => void;
   onSuccess: () => void;
+}
+
+//For patient info public page
+export interface PatientInfoFormProps {
+  firstname: string;
+  setFirstname: (v: string) => void;
+  lastname: string;
+  setLastname: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  dateOfBirth: string;
+  setDateOfBirth: (v: string) => void;
+  gender: string;
+  setGender: (v: string) => void;
+  address: string;
+  setAddress: (v: string) => void;
+  onNext: () => void;
 }
 
