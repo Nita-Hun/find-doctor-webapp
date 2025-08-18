@@ -106,7 +106,6 @@ export default function AppointmentTypeFormModal({
     
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
-        {/* Modified header section to match first modal */}
         <div className="flex justify-between items-center border-b pb-4 mb-4">
           <h2 className="text-xl font-semibold">
             {appointmentType ? 'Edit Appointment Type' : 'Add New Appointment Type'}

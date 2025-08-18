@@ -4,24 +4,13 @@ import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import toast from "react-hot-toast";
 import Pagination from "@/components/Pagination";
-import { PaymentDto } from "@/types/Payment";
 import { PagedResponse } from "@/types/PagedResponse";
 import { FiSearch, FiDollarSign, FiClock } from "react-icons/fi";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import ErrorState from "@/components/ErrorState";
-
-const statusOptions = [
-  { value: "", label: "All Statuses" },
-  { value: "PAID", label: "Paid" },
-  { value: "REFUNDED", label: "Refunded" },
-  { value: "PENDING", label: "Pending" },
-];
-
-const statusColors: Record<string, string> = {
-  PAID: "bg-green-100 text-green-800",
-  REFUNDED: "bg-yellow-100 text-yellow-800",
-  PENDING: "bg-blue-100 text-blue-800",
-};
+import { formatDate } from "@/utils/formatDate";
+import { paymentStatusColors, paymentStatusOptions } from "@/types/Status";
+import { PaymentDto } from "@/dto/paymentDto";
 
 export default function PaymentsListPage() {
   const [payments, setPayments] = useState<PaymentDto[]>([]);
@@ -85,20 +74,6 @@ export default function PaymentsListPage() {
     }
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "N/A";
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) 
-      ? "N/A" 
-      : date.toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-  };
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -145,7 +120,7 @@ export default function PaymentsListPage() {
                 onChange={handleStatusFilterChange}
                 className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
               >
-                {statusOptions.map((option) => (
+                {paymentStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -254,7 +229,7 @@ export default function PaymentsListPage() {
                       <span className="font-medium text-gray-500 md:hidden">Status</span>
                       <span
                         className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          statusColors[payment.paymentStatus] || "bg-gray-100 text-gray-800"
+                          paymentStatusColors[payment.paymentStatus] || "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {payment.paymentStatus}

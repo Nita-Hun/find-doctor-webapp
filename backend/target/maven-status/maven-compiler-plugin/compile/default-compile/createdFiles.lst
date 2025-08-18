@@ -7,7 +7,6 @@ ptsd14/find/doctor/mapper/DoctorMapper.class
 ptsd14/find/doctor/mapper/AppointmentTypeMapper.class
 ptsd14/find/doctor/dto/DoctorDashboardDto.class
 ptsd14/find/doctor/repository/PatientRepository.class
-ptsd14/find/doctor/config/CorsConfig.class
 ptsd14/find/doctor/controller/DoctorController.class
 ptsd14/find/doctor/mapper/HospitalMapper.class
 ptsd14/find/doctor/dto/AdminUserRequest.class
@@ -64,7 +63,6 @@ ptsd14/find/doctor/controller/DashboardController.class
 ptsd14/find/doctor/model/AppointmentType.class
 ptsd14/find/doctor/config/DataSeeder.class
 ptsd14/find/doctor/repository/UserRepo.class
-ptsd14/find/doctor/config/CorsConfig$1.class
 ptsd14/find/doctor/repository/PaymentRepository.class
 ptsd14/find/doctor/controller/UserController.class
 ptsd14/find/doctor/model/Doctor.class

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
-import { AppointmentDto } from "@/types/Appointment";
 import { format } from "date-fns";
 import FeedbackFormModal from "./FeedbackFormModal";
+import { AppointmentDto } from "@/dto/appointmentDto";
 
 export default function HistoryAppointments() {
   const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
@@ -22,7 +22,7 @@ export default function HistoryAppointments() {
     try {
       const res = await apiClient.get("/api/appointments/my/history", {
         params: {
-          page: page - 1, // API is zero-based
+          page: page - 1,
           size: pageSize,
         },
       });
@@ -31,7 +31,6 @@ export default function HistoryAppointments() {
       setAppointments(fetched);
       setTotalPages(res.data.page.totalPages);
 
-      // Show toast for feedbacks already given in current page
       const completedWithFeedback = fetched.filter(
         (a) => a.status === "COMPLETED" && a.feedbackGiven
       );
@@ -136,7 +135,7 @@ export default function HistoryAppointments() {
           onClose={() => setSelectedAppointment(null)}
           onSuccess={() => {
             setSelectedAppointment(null);
-            fetchAppointments(currentPage); // refresh current page after feedback
+            fetchAppointments(currentPage);
           }}
         />
       )}

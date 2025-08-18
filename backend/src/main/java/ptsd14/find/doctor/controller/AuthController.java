@@ -64,7 +64,6 @@ public class AuthController {
         return "Patient content";
     }
 
-    // Get current authenticated user info
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDto> getCurrentUser() {
@@ -81,7 +80,6 @@ public class AuthController {
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
         userDto.setRoleId(user.getRole() != null ? user.getRole().getId() : null);
-        // Set role as String (role name)
         userDto.setRole(user.getRole() != null ? user.getRole().getName() : null);
         userDto.setProfilePhotoUrl(user.getProfilePhotoUrl());
         userDto.setCreatedAt(user.getCreatedAt());
@@ -125,7 +123,7 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
+        String token = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().getName());
 
         String dashboardUrl;
         switch (user.getRole().getName().toUpperCase()) {
@@ -212,7 +210,7 @@ public class AuthController {
         UserDto updatedUser = userService.updateProfile(oldEmail, request);
 
         // Generate new token using role name (as string)
-        String newToken = jwtUtil.generateToken(
+        String newToken = jwtUtil.generateAccessToken(
             updatedUser.getEmail(),
             updatedUser.getRole() != null ? updatedUser.getRole() : "USER"
         );
@@ -223,6 +221,28 @@ public class AuthController {
         response.put("accessToken", newToken);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        System.out.println("Refresh token received: " + refreshToken);
+
+        if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
+            System.out.println("Invalid or expired refresh token");
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired refresh token"));
+        }
+
+        String email = jwtUtil.extractUsername(refreshToken);
+        System.out.println("Email extracted from refresh token: " + email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().getName());
+        System.out.println("Generated new access token: " + newAccessToken);
+
+        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
     }
 
 }

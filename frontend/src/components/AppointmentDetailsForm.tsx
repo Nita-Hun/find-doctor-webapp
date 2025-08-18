@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { AppointmentDetailsProps } from "@/types/Appointment";
 

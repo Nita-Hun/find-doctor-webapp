@@ -16,7 +16,6 @@ public class UserDto {
     private String profilePhotoUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     
 }
 

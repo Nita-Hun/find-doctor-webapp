@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
 import Image from "next/image";
 import { useUserProfile } from "@/hooks/userProfile";
 import { useRef, useState, useEffect } from "react";
 import { Menu, Transition } from "@headlessui/react";
-import { ChevronDownIcon, Cog6ToothIcon, ArrowRightOnRectangleIcon, UserIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ArrowRightOnRectangleIcon, UserIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
@@ -89,7 +89,7 @@ export default function Topbar() {
   return (
     <div className="bg-white border-b border-gray-100 px-6 py-3 flex justify-between items-center sticky top-0 z-10">
       <div className="flex items-center">
-        {/* You can add a logo or app name here if needed */}
+        {/* can add a logo or app name here if needed */}
       </div>
 
       <input

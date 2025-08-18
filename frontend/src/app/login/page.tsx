@@ -32,7 +32,6 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user types
     if (formErrors[e.target.name as keyof typeof formErrors]) {
       setFormErrors({ ...formErrors, [e.target.name]: undefined });
     }
@@ -51,8 +50,6 @@ export default function LoginPage() {
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
-  // ... your imports and component start
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -82,9 +79,6 @@ export default function LoginPage() {
       setIsSubmitting(false);
     }
   };
-
-// ... rest of your LoginPage component
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">

@@ -9,7 +9,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { PagedResponse, PlainPagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
 import Pagination from '@/components/Pagination';
-import { Appointment, Feedback } from '@/types/Feedback';
+import { Appointment, Feedback, ratingColors, ratingOptions } from '@/types/Feedback';
+import { formatDate } from '@/utils/formatDate';
 
 
 export default function FeedbackPage() {
@@ -27,22 +28,6 @@ export default function FeedbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const ratingOptions = [
-    { value: '', label: 'All Ratings' },
-    { value: '1', label: '★☆☆☆☆' },
-    { value: '2', label: '★★☆☆☆' },
-    { value: '3', label: '★★★☆☆' },
-    { value: '4', label: '★★★★☆' },
-    { value: '5', label: '★★★★★' },
-  ];
-
-  const ratingColors: Record<number, string> = {
-    1: 'bg-red-100 text-red-800',
-    2: 'bg-orange-100 text-orange-800',
-    3: 'bg-yellow-100 text-yellow-800',
-    4: 'bg-blue-100 text-blue-800',
-    5: 'bg-green-100 text-green-800',
-  };
 
   const fetchData = async () => {
   setIsLoading(true);
@@ -140,19 +125,6 @@ export default function FeedbackPage() {
     setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedFeedback(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const renderStars = (rating: number) => {
@@ -366,16 +338,6 @@ export default function FeedbackPage() {
 
                     {/* Actions */}
                     <td className="flex space-x-2 justify-end gap-2 md:table-cell px-4 py-2 md:px-6 md:py-4">
-                      <button
-                        onClick={() => {
-                          setSelectedFeedback(feedback);
-                          setShowModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
-                      >
-                        <Pencil size={18} />
-                      </button>
                       <button
                         onClick={() => handleDelete(feedback.id)}
                         className="text-red-600 hover:text-red-800"

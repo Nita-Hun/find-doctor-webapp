@@ -1,6 +1,6 @@
 'use client';
 
-import { Inter } from 'next/font/google'; // your context
+import { Inter } from 'next/font/google';
 import PublicNavbar from '@/components/PublicNavbar';
 import AuthNavbar from '@/components/AuthNavbar';
 import { AuthProvider, useAuth } from '@/hooks/authContext';
@@ -19,8 +19,6 @@ export default function PublicLayout({
     </AuthProvider>
   );
 }
-
-// This component must also be marked as client
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
 
@@ -31,3 +29,5 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+   

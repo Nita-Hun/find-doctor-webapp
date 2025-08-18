@@ -67,7 +67,7 @@ public class StripeWebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Webhook error");
         }
 
-        log.info("Received Stripe event: type={}, id={}", event.getType(), event.getId());
+            log.info("Received Stripe event: type={}, id={}", event.getType(), event.getId());
 
         if ("payment_intent.succeeded".equals(event.getType())) {
             EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
@@ -89,7 +89,7 @@ public class StripeWebhookController {
             String appointmentIdStr = paymentIntent.getMetadata().get("appointmentId");
             if (appointmentIdStr == null || appointmentIdStr.isEmpty()) {
                 log.warn("No appointmentId metadata found in PaymentIntent {}", paymentIntent.getId());
-                return ResponseEntity.ok(""); // acknowledge webhook anyway
+                return ResponseEntity.ok("");
             }
 
             Long appointmentId;
@@ -104,7 +104,7 @@ public class StripeWebhookController {
 
             if (appointment == null) {
                 log.warn("Appointment not found for ID: {}", appointmentId);
-                return ResponseEntity.ok(""); // acknowledge webhook anyway
+                return ResponseEntity.ok(""); 
             }
 
             // Save payment record

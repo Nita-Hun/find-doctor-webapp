@@ -4,16 +4,25 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'react-feather';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Logo from './Logo';
 
 export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const pathname = usePathname(); // Get current path
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsAuthenticated(!!token);
   }, []);
+
+  const navItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Specializations', href: '/public/specializations' },
+    { name: 'About', href: '/public/about' },
+    { name: 'Contact', href: '/public/contact' },
+  ];
 
   return (
     <>
@@ -28,25 +37,27 @@ export default function PublicNavbar() {
             <div className="flex items-center gap-6">
               {/* Desktop Navigation */}
               <div className="hidden md:flex gap-6">
-                {[
-                  { name: 'Home', href: '/' },
-                  { name: 'Specializations', href: '/public/specializations' },
-                  { name: 'About', href: '/public/about' },
-                  { name: 'Contact', href: '/public/contact' },
-                ].map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="relative text-gray-600 hover:text-gray-900 transition-colors font-medium text-md"
-                  >
-                    {item.name}
-                    <motion.span
-                      initial={{ width: 0 }}
-                      whileHover={{ width: '100%' }}
-                      className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500"
-                    />
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`relative font-medium text-md transition-colors ${
+                        isActive ? 'text-blue-700' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {item.name}
+                      {/* Active underline */}
+                      <motion.span
+                        layout
+                        initial={false}
+                        animate={{ width: isActive ? '100%' : 0 }}
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-700"
+                      />
+                    </Link>
+                  );
+                })}
               </div>
 
               {/* Desktop Auth Buttons */}
@@ -89,16 +100,11 @@ export default function PublicNavbar() {
           >
             <div className="px-6 py-4">
               <div className="flex flex-col gap-4">
-                {[
-                  { name: 'Home', href: '/' },
-                  { name: 'Specializations', href: '/specializations' },
-                  { name: 'About', href: '/public/about' },
-                  { name: 'Contact', href: '/contact' },
-                ].map((item) => (
+                {navItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="text-gray-700 hover:text-pink-600 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="text-gray-700 hover:text-pink-600 py-2 px-4 rounded-lg hover:bg-gray-50 active:bg-transparent focus:bg-transparent transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
@@ -109,14 +115,14 @@ export default function PublicNavbar() {
                   <div className="flex gap-3 mt-2">
                     <Link
                       href="/login"
-                      className="flex-1 text-center px-4 py-2 rounded-lg font-medium text-sm text-pink-600 hover:bg-pink-50 transition-colors"
+                      className="flex-1 text-center px-4 py-2 rounded-lg font-medium text-sm text-pink-600 hover:bg-pink-50 active:bg-transparent focus:bg-transparent transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Login
                     </Link>
                     <Link
                       href="/register"
-                      className="flex-1 text-center px-4 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:shadow-md transition-all"
+                      className="flex-1 text-center px-4 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:shadow-md active:bg-gradient-to-r focus:bg-gradient-to-r transition-all"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Register

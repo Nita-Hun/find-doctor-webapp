@@ -124,6 +124,4 @@ public class AppointmentService {
         .map(appointmentMapper::toDto);
 }
 
-
-
 }

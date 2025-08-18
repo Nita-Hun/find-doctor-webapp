@@ -33,7 +33,7 @@ public interface AppointmentMapper {
     @Mapping(target = "payment", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(source = "status", target = "status") // <-- NEW
+    @Mapping(source = "status", target = "status")
     Appointment toEntity(AppointmentDto dto);
 
     // UPDATE ENTITY
@@ -45,7 +45,7 @@ public interface AppointmentMapper {
     @Mapping(target = "payment", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(source = "status", target = "status") // <-- NEW
+    @Mapping(source = "status", target = "status") 
     void updateFromDto(AppointmentDto dto, @MappingTarget Appointment entity);
 
     @AfterMapping

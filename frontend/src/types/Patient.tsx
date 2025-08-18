@@ -1,19 +1,5 @@
-import { UserSimple } from "./UserDto";
-
-export interface PatientDto {
-  id: number;
-  firstname: string;
-  lastname: string;
-  status: string;
-  gender: string;
-  dateOfBirth: string;
-  address: string;
-  createdAt: string;
-  updatedAt: string;
-
-  userId?: number;    
-  userEmail?: string;
-}
+import { PatientDto } from "@/dto/patientDto";
+import { UserSimple } from "./User";
 
 export interface Patient {
   id?: number;
@@ -54,4 +40,6 @@ export interface PatientInfoFormProps {
   setAddress: (v: string) => void;
   onNext: () => void;
 }
+
+
 

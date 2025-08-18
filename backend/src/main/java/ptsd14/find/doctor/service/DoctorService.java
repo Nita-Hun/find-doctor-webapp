@@ -144,19 +144,13 @@ public class DoctorService {
         doctorRepository.deleteById(id);
     }
 
-
     @Transactional(readOnly = true)
     public DoctorDashboardDto getDashboard(Long doctorId) {
         Doctor doctor = doctorRepository.findById(doctorId)
             .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
-        // Count total distinct patients
         Long totalPatients = appointmentRepository.countDistinctPatients(doctorId);
-
-        // Count consultations - change query to use LIKE for pattern matching
         Long consultations = appointmentRepository.countConsultations(doctorId, "Consultation%");
-
-        // Average rating and rating count with null checks
         Double avgRating = feedbackRepository.findAverageRatingByDoctor(doctorId);
         if (avgRating == null) avgRating = 0.0;
 
@@ -256,9 +250,5 @@ public class DoctorService {
 
     return new FeedbackSummaryDto(avgRating, ratingCount);
 }
-
-
-    
-
 
 }

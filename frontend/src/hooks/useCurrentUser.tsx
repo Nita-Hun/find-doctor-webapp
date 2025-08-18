@@ -10,7 +10,8 @@ export interface Role {
 export interface CurrentUser {
   id: number;
   email: string;
-  role: Role;
+  // role: Role;
+  role: 'ADMIN' | 'DOCTOR' | 'PATIENT' | string;
   profilePhotoUrl: string;
   createdAt: string;
   updatedAt: string;

@@ -64,7 +64,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     FROM Appointment a
     WHERE a.doctor.id = :doctorId
       AND a.appointmentType.name LIKE :typeName
-""")
+    """)
 Long countConsultations(@Param("doctorId") Long doctorId, @Param("typeName") String typeName);
 
 
@@ -103,9 +103,5 @@ Long countConsultations(@Param("doctorId") Long doctorId, @Param("typeName") Str
     Page<Appointment> findByPatientUserId(Long userId, Pageable pageable);
 
     Page<Appointment> findByPatientIdAndStatus(Long patientId, AppointmentStatus status, Pageable pageable);
-
-
-
-
 
 }

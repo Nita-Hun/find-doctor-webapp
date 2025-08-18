@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
-import { User, UserFormModalProps } from '@/types/UserDto';
+import { User, UserFormModalProps } from '@/types/User';
 import { FiX } from 'react-icons/fi';
 
 interface RoleDto {
@@ -25,7 +25,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    roleId: '',  // <-- use roleId here as string for select binding
+    roleId: '', 
     profilePhotoUrl: '',
   });
   const [roles, setRoles] = useState<RoleDto[]>([]);
@@ -40,7 +40,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
       setFormData({
         email: user.email,
         password: '',
-        roleId: user.roleId ? String(user.roleId) : '', // <-- assumes user.roleId exists, else you must add it to UserDto on backend
+        roleId: user.roleId ? String(user.roleId) : '',
         profilePhotoUrl: user.profilePhotoUrl || '',
       });
     } else {
@@ -143,7 +143,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
     try {
       const data: Record<string, any> = {
         email: formData.email,
-        roleId: Number(formData.roleId), // send roleId as number
+        roleId: Number(formData.roleId), 
       };
 
       if (!user?.id) {

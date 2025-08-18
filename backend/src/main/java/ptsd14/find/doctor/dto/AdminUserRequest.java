@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class AdminUserRequest {
     @NotNull
-    private String roleName;  // send role name as string
+    private String roleName;
     
     private boolean enabled;
 }

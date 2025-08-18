@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { ComponentType, SVGProps } from 'react';
 import {
   UserCircleIcon,
   UsersIcon,
@@ -13,10 +14,13 @@ import {
   CurrencyDollarIcon,
   ListBulletIcon,
 } from '@heroicons/react/24/outline';
-
-import { ComponentType, SVGProps } from 'react';
+import {
+  FileEditIcon,
+  HospitalIcon,
+  LayoutDashboardIcon,
+  HistoryIcon,
+} from 'lucide-react';
 import useCurrentUser from '@/hooks/useCurrentUser';
-import { FileEditIcon, FolderCodeIcon, HistoryIcon, HospitalIcon, LayoutDashboardIcon, TypeIcon, TypeOutlineIcon } from 'lucide-react';
 
 interface MenuItem {
   label: string;
@@ -34,17 +38,14 @@ const adminItems: MenuItem[] = [
   { label: 'Hospitals', icon: HospitalIcon, href: '/admin/hospitals' },
   { label: 'Feedbacks', icon: FileEditIcon, href: '/admin/feedbacks' },
   { label: 'Appointment Types', icon: ClipboardDocumentListIcon, href: '/admin/appointmentTypes' },
-  
   {
     label: 'Transactions',
     icon: ListBulletIcon,
     children: [
       { label: 'Payments', icon: CurrencyDollarIcon, href: '/admin/payments' },
-      { label: 'Payment Historys', icon: CalendarDaysIcon, href: '/admin/paymentViews' },
-      
+      { label: 'Payment History', icon: CalendarDaysIcon, href: '/admin/paymentViews' },
     ],
   },
-  // Configuration parent with children
   {
     label: 'Settings',
     icon: Cog6ToothIcon,
@@ -60,19 +61,6 @@ const doctorItems: MenuItem[] = [
   { label: 'Upcoming Appointments', icon: CalendarDaysIcon, href: '/doctor/appointments' },
 ];
 
-const patientItems: MenuItem[] = [
-  {
-    label: 'My Appointments',
-    icon: ListBulletIcon,
-    children: [
-      { label: 'Upcoming', icon: CalendarDaysIcon, href: '/admin/upcoming-appointments' },
-      { label: 'Passed', icon: HistoryIcon, href: '/admin/passeds' },
-      
-    ],
-  },
-  { label: 'Feedbacks', icon: UserCircleIcon, href: '/patient/feedbacks' },
-];
-
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, loading } = useCurrentUser();
@@ -85,81 +73,67 @@ export default function Sidebar() {
       </nav>
     );
   }
+  if (!user || !user.role || user.role === 'PATIENT') return null;
 
-  const roleName = user?.role;
-  let menuItems: MenuItem[] = [];
-
-  if (roleName === 'ADMIN') menuItems = adminItems;
-  else if (roleName === 'DOCTOR') menuItems = doctorItems;
-  else if (roleName === 'PATIENT') menuItems = patientItems;
+  const menuItems = user.role === 'ADMIN' ? adminItems : doctorItems;
 
   const toggleMenu = (label: string) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [label]: !prev[label],
-    }));
+    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
   const renderMenuItem = (item: MenuItem, level = 0) => {
-  const hasChildren = item.children && item.children.length > 0;
-  const isOpen = openMenus[item.label];
-  const isActive =
-    item.href ? pathname === item.href || pathname.startsWith(item.href + '/') : false;
+    const hasChildren = item.children && item.children.length > 0;
+    const isOpen = openMenus[item.label];
+    const isActive = item.href ? pathname === item.href || pathname.startsWith(item.href + '/') : false;
+    const Icon = item.icon;
 
-  const Icon = item.icon;
+    return (
+      <div key={item.label}>
+        <div
+          className={`flex items-center gap-2 p-2 rounded-md text-sm ${
+            isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'
+          }`}
+          style={{ paddingLeft: `${level * 20}px` }}
+        >
+          {item.href ? (
+            <Link href={item.href} className="flex flex-1 items-center gap-2">
+              <Icon className="h-5 w-5" />
+              <span className="hidden lg:inline">{item.label}</span>
+            </Link>
+          ) : (
+            <div className="flex flex-1 items-center gap-2 cursor-default">
+              <Icon className="h-5 w-5" />
+              <span className="hidden lg:inline">{item.label}</span>
+            </div>
+          )}
 
-  return (
-    <div key={item.label}>
-      <div
-        className={`flex items-center gap-2 p-2 rounded-md text-sm ${
-          isActive ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'
-        }`}
-        style={{ paddingLeft: `${level * 20}px` }}
-      >
-        {item.href ? (
-          <Link href={item.href} className="flex flex-1 items-center gap-2">
-            <Icon className="h-5 w-5" />
-            <span className="hidden lg:inline">{item.label}</span>
-          </Link>
-        ) : (
-          <div className="flex flex-1 items-center gap-2 cursor-default">
-            <Icon className="h-5 w-5" />
-            <span className="hidden lg:inline">{item.label}</span>
+          {hasChildren && (
+            <button
+              onClick={() => toggleMenu(item.label)}
+              aria-label="Toggle Submenu"
+              className="ml-auto"
+            >
+              <svg
+                className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {hasChildren && isOpen && (
+          <div>
+            {item.children!.map((child) => renderMenuItem(child, level + 1))}
           </div>
         )}
-
-
-        {hasChildren && (
-          <button
-            onClick={() => toggleMenu(item.label)}
-            aria-label="Toggle Submenu"
-            className="ml-auto"
-          >
-            <svg
-              className={`h-4 w-4 transition-transform duration-200 ${
-                isOpen ? 'rotate-90' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
       </div>
-
-      {hasChildren && isOpen && (
-        <div>
-          {item.children!.map((child) => renderMenuItem(child, level + 1))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
+    );
+  };
 
   return (
     <nav className="p-4 space-y-2 overflow-y-auto">

@@ -22,7 +22,6 @@ public class AdminService {
             throw new RuntimeException("Email already exists");
         }
 
-        // Find UserRole entity by name
         UserRole role = userRoleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
 

@@ -66,7 +66,7 @@ public class PaymentService {
                 .orElseThrow(() -> new AppointmentNotFoundException(appointmentId));
 
         Payment payment = new Payment();
-        payment.setAmount(BigDecimal.valueOf(paymentIntent.getAmount()).movePointLeft(2)); // cents to dollars
+        payment.setAmount(BigDecimal.valueOf(paymentIntent.getAmount()).movePointLeft(2)); 
         payment.setPaymentStatus("COMPLETED");
         payment.setPaymentMethod(paymentIntent.getPaymentMethod() != null ? paymentIntent.getPaymentMethod() : "unknown");
         payment.setStripePaymentIntentId(paymentIntent.getId());
@@ -131,7 +131,7 @@ public class PaymentService {
                 .setPaymentIntent(payment.getStripePaymentIntentId())
                 .build();
 
-        Refund.create(params); // no variable needed
+        Refund.create(params); 
 
         payment.setPaymentStatus("REFUNDED");
         paymentRepository.save(payment);

@@ -80,7 +80,7 @@ public class PaymentController {
     public ResponseEntity<?> refundPayment(@PathVariable Long id) {
     paymentService.refundPayment(id);
     return ResponseEntity.ok("Payment refunded successfully.");
-}
+    }
 
     @PostMapping("/pay-cash")
     public ResponseEntity<String> payByCash(

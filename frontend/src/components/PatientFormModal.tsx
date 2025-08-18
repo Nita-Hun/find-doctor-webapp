@@ -5,18 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
 import { Patient, PatientFormModalProps } from '@/types/Patient';
-
-const statusOptions = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'PENDING', label: 'Pending' },
-];
-
-const genderOptions = [
-  { value: 'MALE', label: 'Male' },
-  { value: 'FEMALE', label: 'Female' },
-  { value: 'OTHER', label: 'Other' },
-];
+import { genderOptions, statusOptions } from '@/types/Status';
 
 export default function PatientFormModal({
   patient,

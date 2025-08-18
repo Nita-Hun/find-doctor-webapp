@@ -1,13 +1,5 @@
 export interface AppointmentType {
-  id?: number;  // Optional for new items
-  name: string;
-  price: number;
-  duration: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-export interface AppointmentTypeDto {
-  id: number;
+  id?: number; 
   name: string;
   price: number;
   duration: number;

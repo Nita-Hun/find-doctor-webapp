@@ -7,9 +7,10 @@ import HospitalFormModal from '@/components/HospitalFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { HospitalDto } from '@/types/Hospital';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
+import { formatDate } from '@/utils/formatDate';
+import { HospitalDto } from '@/dto/hospitalDto';
 
 export default function HospitalsPage() {
   const [hospitals, setHospitals] = useState<HospitalDto[]>([]);
@@ -81,19 +82,6 @@ export default function HospitalsPage() {
     setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedHospital(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (

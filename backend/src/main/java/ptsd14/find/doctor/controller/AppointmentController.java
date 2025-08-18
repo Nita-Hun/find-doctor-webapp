@@ -186,10 +186,6 @@ public class AppointmentController {
         Page<AppointmentDto> appointments = appointmentService.getAppointmentsForPatient(
                 userId, PageRequest.of(page, size));
         return ResponseEntity.ok(appointments);
-    }
-
-   
-
-    
+    }    
 
 }

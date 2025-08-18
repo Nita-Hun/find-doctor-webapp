@@ -6,17 +6,8 @@ import Image from 'next/image';
 import { FaUserMd, FaCalendarCheck, FaHeadset, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
+import { Feedback } from '@/types/Feedback';
 
-interface Feedback {
-  doctorName: string;
-  id: number;
-  rating: number;
-  comment: string;
-  patientName?: string;
-  createdAt?: string;
-}
-
-// Helper component to display stars nicely
 function StarRating({ rating }: { rating: number }) {
   const fullStars = Math.floor(rating);
   const halfStar = rating % 1 >= 0.5;

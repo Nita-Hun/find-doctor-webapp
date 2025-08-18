@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -32,8 +32,6 @@ export default function AppointmentFormModal({
 
 
   const [loading, setLoading] = useState(false);
-
-  // Reset form fields when appointment prop changes (including formatting datetime-local)
   useEffect(() => {
     setDoctorId(appointment?.doctorId ?? 0);
     setPatientId(appointment?.patientId ?? 0);

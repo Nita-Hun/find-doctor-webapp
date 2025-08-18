@@ -1,14 +1,39 @@
-// app/admin/layout.tsx or wherever your layout file is
 'use client';
 
-import Logo from '@/components/Logo';
-import Sidebar from '@/components/Sidebar';
-import Topbar from '@components/Topbar';
-import Link from 'next/link';
+import { useUserProfile } from "@/hooks/userProfile";
+import Logo from "@/components/Logo";
+import Sidebar from "@/components/Sidebar";
+import Topbar from "@/components/Topbar";
+import Link from "next/link";
+import AuthNavbar from "@/components/AuthNavbar";
 
-export default function DashboardLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useUserProfile();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-red-500">Unauthorized</p>
+      </div>
+    );
+  }
+
+  if (user.role === "PATIENT") {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <AuthNavbar />
+        <main>{children}</main>
+      </div>
+    );
+  }
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}

@@ -1,6 +1,5 @@
 package ptsd14.find.doctor.dto;
 
-
 import java.util.Set;
 
 import lombok.Data;

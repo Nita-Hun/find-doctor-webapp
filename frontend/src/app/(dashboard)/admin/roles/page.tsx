@@ -10,6 +10,8 @@ import Pagination from "@/components/Pagination";
 import { Role } from "@/types/Role";
 import { PagedResponse } from "@/types/PagedResponse";
 import { FiSearch } from "react-icons/fi";
+import { formatDate } from "@/utils/formatDate";
+import { statusColors, statusOptions } from "@/types/Status";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -24,17 +26,6 @@ export default function RolesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const statusOptions = [
-    { value: "", label: "All Statuses" },
-    { value: "ACTIVE", label: "Active" },
-    { value: "INACTIVE", label: "Inactive" },
-  ];
-
-  const statusColors: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-800",
-    INACTIVE: "bg-gray-100 text-gray-800",
-  };
 
   const fetchRoles = async () => {
     setIsLoading(true);
@@ -99,17 +90,6 @@ export default function RolesPage() {
     setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedRole(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "N/A";
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const buildInitialData = (role: Role) => {

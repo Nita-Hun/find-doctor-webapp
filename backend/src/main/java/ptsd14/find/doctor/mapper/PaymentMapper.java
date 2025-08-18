@@ -12,7 +12,6 @@ public interface PaymentMapper {
     @Mapping(target = "patientName", expression = "java(payment.getAppointment().getPatient().getFirstname() + \" \" + payment.getAppointment().getPatient().getLastname())")
     PaymentDto toDto(Payment payment);
 
-    // DTO to entity mapping as before
     @Mapping(target = "appointment", expression = "java(mapAppointment(paymentDto.getAppointmentId()))")
     Payment toEntity(PaymentDto paymentDto);
 

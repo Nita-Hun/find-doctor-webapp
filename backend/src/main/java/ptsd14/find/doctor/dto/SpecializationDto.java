@@ -9,7 +9,7 @@ import lombok.Data;
 public class SpecializationDto {
     private Long id;
     private String name;
-     private String iconUrl;
+    private String iconUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

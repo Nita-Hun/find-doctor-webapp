@@ -7,37 +7,13 @@ import ErrorState from '@/components/ErrorState';
 import { apiClient } from '@/lib/api-client';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { AppointmentDto, AppointmentStatus } from '@/types/Appointment';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
+import { formatDate } from '@/utils/formatDate';
+import { AppointmentStatus, appointmentStatusColors, appointmentStatusOptions, paymentStatusColors } from '@/types/Status';
+import { AppointmentDto } from '@/dto/appointmentDto';
+import { AppointmentPageProps } from '@/types/Appointment';
 
-interface AppointmentPageProps {
-  userRole: 'ADMIN' | 'DOCTOR' | 'PATIENT';
-}
-
-
-const paymentStatusColors: Record<string, string> = {
-  PAID: 'bg-green-100 text-green-800',
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  REFUNDED: 'bg-red-100 text-red-800',
-  UNPAID: 'bg-gray-100 text-gray-800',
-};
-
-
-const statusOptions = [
-  { value: '', label: 'All' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'COMPLETED', label: 'Completed' },
-  { value: 'CANCELED', label: 'Canceled' },
-];
-
-const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  CONFIRMED: 'bg-blue-100 text-blue-800',
-  COMPLETED: 'bg-green-100 text-green-800',
-  CANCELED: 'bg-red-100 text-red-800',
-};
 
 export default function AppointmentPage({ userRole }: AppointmentPageProps) {
   const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
@@ -57,7 +33,7 @@ export default function AppointmentPage({ userRole }: AppointmentPageProps) {
     setIsLoading(true);
     setError(null);
     try {
-      let url = '/api/appointments'; // default for ADMIN
+      let url = '/api/appointments';
 
       if (userRole === 'DOCTOR') {
         url = '/api/appointments/doctor';
@@ -124,19 +100,6 @@ export default function AppointmentPage({ userRole }: AppointmentPageProps) {
     setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedAppointment(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const updateStatus = async (id: number, status: AppointmentStatus) => {
@@ -207,7 +170,7 @@ export default function AppointmentPage({ userRole }: AppointmentPageProps) {
                 onChange={handleStatusFilterChange}
                 className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
               >
-                {statusOptions.map(option => (
+                {appointmentStatusOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -361,7 +324,7 @@ export default function AppointmentPage({ userRole }: AppointmentPageProps) {
                     </td>
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Status</span>
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[a.status] || 'bg-gray-100 text-gray-800'}`}>
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${appointmentStatusColors[a.status] || 'bg-gray-100 text-gray-800'}`}>
                         {a.status}
                       </span>
                     </td>

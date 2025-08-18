@@ -7,10 +7,11 @@ import UserFormModal from '@/components/UserFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { UserDto } from '@/types/UserDto';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
 import UserThumbnail from '@/components/UserThumbnail';
+import { formatDate } from '@/utils/formatDate';
+import { UserDto } from '@/dto/userDto';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserDto[]>([]);
@@ -42,19 +43,6 @@ export default function UsersPage() {
     if (!roleName) return 'bg-gray-100 text-gray-800';
     return roleColors[roleName as keyof typeof roleColors] || 'bg-gray-100 text-gray-800';
   }
-
-  const formatDate = useCallback((dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }, []);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);

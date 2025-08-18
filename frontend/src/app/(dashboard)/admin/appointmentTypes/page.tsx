@@ -7,9 +7,10 @@ import AppointmentTypeFormModal from '@/components/AppointmentTypeFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { AppointmentTypeDto } from '@/types/AppointmentType';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
+import { formatDate } from '@/utils/formatDate';
+import { AppointmentTypeDto } from '@/dto/appointmentTypeDto';
 
 export default function AppointmentTypesPage() {
   const [types, setTypes] = useState<AppointmentTypeDto[]>([]);
@@ -24,7 +25,6 @@ export default function AppointmentTypesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
 
   const fetchTypes = async () => {
     setIsLoading(true);
@@ -88,19 +88,6 @@ export default function AppointmentTypesPage() {
 
   const formatPrice = (price?: number) => {
     return price ? `$${price.toFixed(2)}` : 'N/A';
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (

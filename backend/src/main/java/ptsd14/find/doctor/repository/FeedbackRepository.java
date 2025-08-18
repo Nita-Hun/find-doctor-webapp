@@ -25,7 +25,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     Page<Feedback> findByCommentContainingIgnoreCase(String trim, Pageable pageable);
 
-    // Fixed: Average rating by doctor
     @Query("""
         SELECT AVG(f.rating)
         FROM Feedback f
@@ -33,7 +32,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     """)
     Double findAverageRatingByDoctor(@Param("doctorId") Long doctorId);
 
-    // Fixed: Count ratings by doctor
     @Query("""
         SELECT COUNT(f)
         FROM Feedback f

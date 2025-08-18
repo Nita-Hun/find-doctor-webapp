@@ -19,7 +19,7 @@ public class DataSeeder {
 
     @PostConstruct
     public void seed() {
-        // First, ensure roles exist
+
         createRoleIfNotExists("ADMIN");
         createRoleIfNotExists("DOCTOR");
         createRoleIfNotExists("PATIENT");

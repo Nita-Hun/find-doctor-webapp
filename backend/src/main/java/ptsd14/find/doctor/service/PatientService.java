@@ -35,7 +35,7 @@ public class PatientService {
         boolean hasStatus = status != null && !status.trim().isEmpty();
 
         if (hasStatus && hasSearch) {
-            // Search by name and filter by status
+    
             String trimmedSearch = search.trim();
             String trimmedStatus = status.trim();
             patients = patientRepository.findByStatusIgnoreCaseAndFirstnameContainingIgnoreCaseOrStatusIgnoreCaseAndLastnameContainingIgnoreCase(
@@ -44,10 +44,10 @@ public class PatientService {
                 pageable
             );
         } else if (hasStatus) {
-            // Filter by status only
+            
             patients = patientRepository.findByStatusIgnoreCase(status.trim(), pageable);
         } else if (hasSearch) {
-            // Search by name only
+            
             String trimmed = search.trim();
             patients = patientRepository.findByFirstnameContainingIgnoreCaseOrLastnameContainingIgnoreCase(
                 trimmed,
@@ -55,7 +55,7 @@ public class PatientService {
                 pageable
             );
         } else {
-            // No filters
+            
             patients = patientRepository.findAll(pageable);
         }
 
@@ -76,7 +76,6 @@ public class PatientService {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
         
-        //Check if the user already has a patient profile
         Optional<Patient> existingPatient = patientRepository.findByUserId(user.getId());
         if (existingPatient.isPresent()) {
             throw new IllegalStateException("You already have a patient profile");
@@ -87,7 +86,7 @@ public class PatientService {
         patient.setUser(user);
 
         if (patient.getStatus() == null || patient.getStatus().isEmpty()) {
-            patient.setStatus("INACTIVE"); // or ACTIVE if you prefer
+            patient.setStatus("INACTIVE"); 
         }
 
         return patientMapper.toDto(patientRepository.save(patient));
@@ -123,8 +122,6 @@ public class PatientService {
         .orElseThrow(() -> new ResourceNotFoundException("Patient not found for user email: " + email));
     return patientMapper.toDto(patient);
     }
-
-
 
 }
 

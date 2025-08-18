@@ -7,24 +7,12 @@ import PatientFormModal from '@/components/PatientFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { PatientDto } from '@/types/Patient';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
-import { UserSimple } from '@/types/UserDto';
-
-
-const statusOptions = [
-  { value: '', label: 'All Statuses' },
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'PENDING', label: 'Pending' }
-];
-
-const statusColors: Record<string, string> = {
-  ACTIVE: 'bg-green-100 text-green-800',
-  INACTIVE: 'bg-gray-100 text-gray-800',
-  PENDING: 'bg-yellow-100 text-yellow-800',
-};
+import { UserSimple } from '@/types/User';
+import { formatDate } from '@/utils/formatDate';
+import { statusColors, statusOptions } from '@/types/Status';
+import { PatientDto } from '@/dto/patientDto';
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<PatientDto[]>([]);
@@ -123,19 +111,6 @@ export default function PatientsPage() {
     setRefreshKey(prev => prev + 1);
     setShowModal(false);
     setSelectedPatient(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const calculateAge = (dateOfBirth: string) => {

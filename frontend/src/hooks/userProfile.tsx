@@ -1,20 +1,12 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
-
-export interface UserProfile {
-  id: number;
-  email: string;
-  role: "ADMIN" | "DOCTOR" | "PATIENT";
-  profilePhotoUrl: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { UserDto } from "@/dto/userDto";
 
 export function useUserProfile() {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserDto | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = () => {
+  const fetchUser = async (): Promise<void> => {
     const token = localStorage.getItem("token");
     if (!token) {
       setLoading(false);
@@ -23,16 +15,16 @@ export function useUserProfile() {
     }
 
     setLoading(true);
-
-    apiClient
-      .get<UserProfile>("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ Pass token here
-        },
-      })
-      .then((res) => setUser(res.data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    try {
+      const res = await apiClient.get<UserDto>("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(res.data);
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

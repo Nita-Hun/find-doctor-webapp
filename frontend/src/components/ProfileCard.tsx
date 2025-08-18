@@ -4,7 +4,7 @@ interface ProfileCardProps {
     specialization: string;
     rating: number;
     ratingCount: number;
-    // photoUrl?: string;  // remove or make optional
+    // photoUrl?: string;
   };
 }
 

@@ -45,7 +45,7 @@ public class SpecializationService {
         validateNameUniqueness(dto.getName(), null);
 
         Specialization specialization = specializationMapper.toEntity(dto);
-        specialization.setId(null); // Ensure new entity
+        specialization.setId(null); 
 
         if (dto.getIconUrl() != null) {
         specialization.setIconUrl(dto.getIconUrl());
@@ -71,7 +71,6 @@ public class SpecializationService {
         Specialization existing = specializationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialization not found"));
 
-        // Update fields
         if (dto.getName() != null && !dto.getName().equals(existing.getName())) {
             validateNameUniqueness(dto.getName(), id);
             existing.setName(dto.getName());

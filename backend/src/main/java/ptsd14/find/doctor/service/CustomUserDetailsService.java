@@ -30,14 +30,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-    // Add role authority (with ROLE_ prefix)
     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
 
     // Add all permission authorities from the role.permissions set
     if (role.getPermissions() != null) {
         authorities.addAll(
             role.getPermissions().stream()
-                .map(SimpleGrantedAuthority::new)  // permissions like "DOCTOR:view"
+                .map(SimpleGrantedAuthority::new) 
                 .collect(Collectors.toList())
         );
     }

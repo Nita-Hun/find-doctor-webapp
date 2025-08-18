@@ -78,7 +78,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
     }
 
-    // Generic fallback
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneralException(Exception ex) {
         ApiError apiError = new ApiError(

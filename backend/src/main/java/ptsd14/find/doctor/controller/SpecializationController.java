@@ -20,7 +20,6 @@ public class SpecializationController {
     private final SpecializationService specializationService;
 
     @GetMapping
-    // @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<SpecializationDto>> getAll(
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
@@ -29,7 +28,7 @@ public class SpecializationController {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 
         var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
-        // Pass both search and status to the service
+    
         Page<SpecializationDto> spcializationsPage = specializationService.getAll(pageable, search);
 
         return ResponseEntity.ok(spcializationsPage);

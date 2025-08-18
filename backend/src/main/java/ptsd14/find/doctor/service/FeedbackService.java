@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ptsd14.find.doctor.dto.FeedbackDto;
-import ptsd14.find.doctor.dto.FeedbackDto.FeedbackSummaryDto;
 import ptsd14.find.doctor.exception.ResourceNotFoundException;
 import ptsd14.find.doctor.mapper.FeedbackMapper;
 import ptsd14.find.doctor.model.Appointment;
@@ -68,7 +67,6 @@ public class FeedbackService {
     Appointment appointment = appointmentRepository.findById(dto.getAppointmentId())
             .orElseThrow(() -> new IllegalArgumentException("Invalid appointment ID"));
 
-    // Check if feedback already exists for this appointment
     if (feedbackRepository.existsByAppointmentId(dto.getAppointmentId())) {
         throw new IllegalStateException("Feedback already exists for this appointment.");
     }
@@ -99,7 +97,5 @@ public class FeedbackService {
     public void delete(Long id) {
         feedbackRepository.deleteById(id);
     }
-
-    
 
 }

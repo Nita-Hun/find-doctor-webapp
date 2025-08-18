@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -38,7 +38,7 @@ export default function ProfilePhotoUploader({ onUploadSuccess }: { onUploadSucc
       );
 
       toast.success("Profile photo updated!");
-      onUploadSuccess(); // trigger refetch
+      onUploadSuccess(); 
       setFile(null);
     } catch (error) {
       console.error(error);

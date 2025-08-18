@@ -47,7 +47,7 @@ public class AppointmentTypeService {
         validateNameUniqueness(dto.getName(), null);
 
         AppointmentType appointmentType = appointmentTypeMapper.toEntity(dto);
-        appointmentType.setId(null); // Ensure new entity
+        appointmentType.setId(null);
         AppointmentType saved = appointmentTypeRepository.save(appointmentType);
         return appointmentTypeMapper.toDto(saved);
     }
@@ -55,8 +55,7 @@ public class AppointmentTypeService {
     public AppointmentTypeDto update(Long id, AppointmentTypeDto dto) {
         AppointmentType existing = appointmentTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("AppointmentType not found"));
-
-        // Only validate if name is being changed
+                
         if (dto.getName() != null && !dto.getName().equals(existing.getName())) {
             validateNameUniqueness(dto.getName(), id);
             existing.setName(dto.getName());

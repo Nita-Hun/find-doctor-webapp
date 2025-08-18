@@ -23,7 +23,6 @@ public class DoctorController {
     private final DoctorService doctorService;
 
     @GetMapping
-   @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PATIENT')")
     public ResponseEntity<Page<DoctorDto>> getAllDoctors(
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
@@ -34,7 +33,6 @@ public class DoctorController {
 
         var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        // Pass both search and status to the service
         Page<DoctorDto> doctorsPage = doctorService.getAll(pageable, search, status);
 
         return ResponseEntity.ok(doctorsPage);

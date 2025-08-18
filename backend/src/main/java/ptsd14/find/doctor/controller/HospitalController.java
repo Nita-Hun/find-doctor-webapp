@@ -32,7 +32,6 @@ public class HospitalController {
 
         var pageable = PageRequest.of(pageNumber, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        // Pass both search and status to the service
         Page<HospitalDto> hospitalsPage = hospitalService.getAll(pageable, search);
 
         return ResponseEntity.ok(hospitalsPage);

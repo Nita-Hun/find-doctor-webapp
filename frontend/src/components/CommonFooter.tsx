@@ -1,4 +1,3 @@
-// app/public/page.tsx (or pages/public.tsx)
 'use client';
 
 import { useRouter } from "next/navigation";
@@ -10,8 +9,7 @@ export default function CommonFooter() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Example: check localStorage token or user role to determine login state
-    const token = localStorage.getItem("token"); // or whatever you store
+    const token = localStorage.getItem("token"); 
     setIsLoggedIn(!!token);
   }, []);
 
@@ -19,7 +17,7 @@ export default function CommonFooter() {
     if (!isLoggedIn) {
       alert("Please login or register first to book an appointment.");
     } else {
-      router.push("/public/booking"); // or your booking page
+      router.push("/public/booking"); 
     }
   };
   return (

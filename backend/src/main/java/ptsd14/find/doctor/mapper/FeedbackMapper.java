@@ -27,8 +27,7 @@ public interface FeedbackMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateFromDto(FeedbackDto dto, @MappingTarget Feedback feedback);
-
-    // Helper method to build Appointment reference from ID
+    
     default Appointment mapAppointment(Long id) {
         if (id == null) return null;
         Appointment appointment = new Appointment();

@@ -1,5 +1,4 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/FindDoctorApplication.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/CorsConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/DataSeeder.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/OpenApiConfig.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/config/SecurityConfig.java
@@ -89,7 +88,6 @@
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/FeedbackService.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/HospitalService.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/PatientService.java
-/Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/PaymentResult.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/PaymentService.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/SpecializationService.java
 /Users/nitahun/find-doctor-webapp/backend/src/main/java/ptsd14/find/doctor/service/UserRoleService.java

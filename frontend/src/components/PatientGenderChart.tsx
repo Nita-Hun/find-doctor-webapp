@@ -1,4 +1,3 @@
-// components/PatientGenderChart.tsx
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from "recharts";
 
 export default function PatientGenderChart({ data }: { data: any[] }) {

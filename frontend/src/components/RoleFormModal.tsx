@@ -1,38 +1,11 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { FiX } from "react-icons/fi";
 import { apiClient } from "@/lib/api-client";
+import { ACTIONS, ENTITIES, PermissionSet, RoleFormData, RoleFormModalProps } from "@/types/Role";
 
-const ENTITIES = ["DOCTOR", "PATIENT", "APPOINTMENT", "ROLE", "USER", "SPECIALIZATION", "DASHBOARD", "PAYMENT" ];
-const ACTIONS = ["view", "create", "edit", "delete", "confirm", "completed", "canceled"] as const;
-
-type PermissionSet = {
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
-  confirm: boolean;
-  completed: boolean;
-  canceled: boolean;
-};
-
-interface RoleFormData {
-  id?: number;
-  name: string;
-  description: string;
-  status: string; // "ACTIVE" or "INACTIVE"
-  permissions: string[] | Record<string, PermissionSet>;
-}
-
-interface RoleFormModalProps {
-  initialData?: RoleFormData;
-  onClose: () => void;
-  onSuccess: () => void;
-}
-
-// ✅ Helper to map string[] to Record<string, PermissionSet>
 function mapPermissionsArrayToRecord(perms: string[]): Record<string, PermissionSet> {
   const record: Record<string, PermissionSet> = {};
   ENTITIES.forEach((entity) => {
@@ -58,14 +31,11 @@ export default function RoleFormModal({ initialData, onClose, onSuccess }: RoleF
   const [permissions, setPermissions] = useState<Record<string, PermissionSet>>(() => {
     if (initialData?.permissions) {
       if (Array.isArray(initialData.permissions)) {
-        // permissions came as string[]
         return mapPermissionsArrayToRecord(initialData.permissions);
       } else {
-        // already in Record<string, PermissionSet>
         return initialData.permissions;
       }
     }
-    // default empty permissions
     const perms: Record<string, PermissionSet> = {};
     ENTITIES.forEach((entity) => {
       perms[entity] = { view: false, create: false, edit: false, delete: false, confirm: false, completed: false, canceled: false };

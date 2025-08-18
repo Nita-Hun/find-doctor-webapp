@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:3000")); // frontend URL
+                corsConfig.setAllowedOrigins(java.util.List.of("http://localhost:3000"));
                 corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                 corsConfig.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "Accept"));
                 corsConfig.setAllowCredentials(true);
@@ -38,7 +38,7 @@ public class SecurityConfig {
             }))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                 .requestMatchers("/api/webhook").permitAll()
                 .requestMatchers("/uploads/**").permitAll()

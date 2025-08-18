@@ -36,12 +36,11 @@ public class DashboardService {
     BigDecimal totalRevenue = paymentRepository.sumTotalRevenue();
     dto.setTotalRevenue(totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
 
-    // Last 30 days revenue data
     List<DashboardStatsDto.DailyRevenue> dailyRevenue = paymentRepository.findRevenueLast30Days(LocalDateTime.now().minusDays(30))
         .stream()
         .map(record -> {
             DashboardStatsDto.DailyRevenue r = new DashboardStatsDto.DailyRevenue();
-            r.setDate(((java.sql.Date) record[0]).toLocalDate());  // convert here
+            r.setDate(((java.sql.Date) record[0]).toLocalDate()); 
             r.setRevenue((BigDecimal) record[1]);
             return r;
         })
@@ -72,7 +71,7 @@ public class DashboardService {
 
     @Transactional
     public List<DashboardStatsDto.AppointmentSummary> getWeeklyAppointments() {
-        // Week start and end (Monday to Sunday)
+
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
         LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY);
@@ -101,25 +100,25 @@ public class DashboardService {
         List<Object[]> rawData = paymentRepository.findMonthlyRevenue();
 
         return rawData.stream()
-    .map(record -> {
-        Integer monthNumber = (Integer) record[0];
-        BigDecimal revenue = (BigDecimal) record[1];
-        String monthName = Month.of(monthNumber).getDisplayName(java.time.format.TextStyle.SHORT, Locale.ENGLISH);
-        return Map.<String, Object>of("month", monthName, "revenue", revenue);
-    })
-    .collect(Collectors.toList());
+        .map(record -> {
+            Integer monthNumber = (Integer) record[0];
+            BigDecimal revenue = (BigDecimal) record[1];
+            String monthName = Month.of(monthNumber).getDisplayName(java.time.format.TextStyle.SHORT, Locale.ENGLISH);
+            return Map.<String, Object>of("month", monthName, "revenue", revenue);
+        })
+        .collect(Collectors.toList());
     }
     @Transactional
     public List<Map<String, Object>> getRecentActivities() {
         List<Appointment> recentAppointments = appointmentRepository.findTop5ByOrderByDateTimeDesc();
 
         return recentAppointments.stream()
-    .map(a -> Map.<String, Object>of(
-        "description", "Appointment for " + a.getPatient().getFirstname() + " " + a.getPatient().getLastname() +
-            " with Dr. " + a.getDoctor().getFirstname() + " " + a.getDoctor().getLastname() +
-            " on " + a.getDateTime().toLocalDate()
-    ))
-    .collect(Collectors.toList());
+        .map(a -> Map.<String, Object>of(
+            "description", "Appointment for " + a.getPatient().getFirstname() + " " + a.getPatient().getLastname() +
+                " with Dr. " + a.getDoctor().getFirstname() + " " + a.getDoctor().getLastname() +
+                " on " + a.getDateTime().toLocalDate()
+        ))
+        .collect(Collectors.toList());
     }
     
 }

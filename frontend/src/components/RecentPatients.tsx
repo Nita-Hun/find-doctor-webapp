@@ -1,4 +1,3 @@
-// components/RecentPatients.tsx
 export default function RecentPatients({ patients }: { patients: any[] }) {
   return (
     <table className="w-full text-sm">

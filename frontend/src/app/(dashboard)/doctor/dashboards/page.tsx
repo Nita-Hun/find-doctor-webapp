@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
-import { DoctorDashboardDto } from '@/types/DoctorDto';
 import PatientGenderChart from '@/components/PatientGenderChart';
+import { DoctorDashboardDto } from '@/dto/doctorDashboardDto';
 
 export default function DoctorDashboardPage() {
   const [data, setData] = useState<DoctorDashboardDto | null>(null);

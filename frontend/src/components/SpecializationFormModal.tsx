@@ -19,7 +19,7 @@ export default function SpecializationFormModal({
 }: SpecializationFormModalProps) {
   const [formData, setFormData] = useState({
     name: specialization?.name || '',
-    iconUrl: specialization?.iconUrl || '',  // <-- Add iconUrl here
+    iconUrl: specialization?.iconUrl || '',  
   });
   const [isNameUnique, setIsNameUnique] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
@@ -31,7 +31,7 @@ export default function SpecializationFormModal({
     setIsNameUnique(true);
     setFormData({
       name: specialization?.name || '',
-      iconUrl: specialization?.iconUrl || '',  // <-- reset iconUrl on specialization change
+      iconUrl: specialization?.iconUrl || '',  
     });
   }, [specialization]);
 
@@ -84,7 +84,6 @@ export default function SpecializationFormModal({
       newErrors.name = 'Name must be at least 3 characters';
     }
 
-    // Optional: Validate iconUrl is a valid URL if it's not empty
     if (formData.iconUrl && !/^https?:\/\/.+/.test(formData.iconUrl.trim())) {
       newErrors.iconUrl = 'Icon URL must be a valid URL starting with http or https';
     }
@@ -108,7 +107,7 @@ export default function SpecializationFormModal({
       const payload = { 
         ...formData, 
         name: formData.name.trim(), 
-        iconUrl: formData.iconUrl.trim() || null,  // trim and allow null if empty
+        iconUrl: formData.iconUrl.trim() || null,
       };
       if (specialization) {
         await apiClient.put(`/api/specializations/${specialization.id}`, payload);

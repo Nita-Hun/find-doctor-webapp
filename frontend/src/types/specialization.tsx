@@ -6,3 +6,11 @@ export interface Specialization {
   createdAt?: string;
   updatedAt?: string;
 }
+export type SpecializationCard = {
+  id: number;
+  name: string;
+};
+
+export type SpecializationCardProps = {
+  specialization: Specialization;
+};

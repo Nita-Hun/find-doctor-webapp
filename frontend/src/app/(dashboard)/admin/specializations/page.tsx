@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination';
 import { Specialization } from '@/types/Specialization';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
+import { formatDate } from '@/utils/formatDate';
 
 export default function SpecializationsPage() {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -81,19 +82,6 @@ export default function SpecializationsPage() {
     setRefreshKey((prev) => prev + 1);
     setShowModal(false);
     setSelectedSpecialization(null);
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (

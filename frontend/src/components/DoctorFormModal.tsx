@@ -4,14 +4,8 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { FiX } from 'react-icons/fi';
-import { Doctor, DoctorFormModalProps } from '@/types/DoctorDto';
-
-const statusOptions = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'ON_LEAVE', label: 'On Leave' },
-  { value: 'SUSPENDED', label: 'Suspended' },
-];
+import { doctorStatusOptions } from '@/types/Status';
+import { Doctor, DoctorFormModalProps } from '@/types/Doctor';
 
 export default function DoctorFormModal({
   doctor,
@@ -230,7 +224,7 @@ export default function DoctorFormModal({
               className="w-full border border-gray-300 rounded px-3 py-2"
               required
             >
-              {statusOptions.map((option) => (
+              {doctorStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

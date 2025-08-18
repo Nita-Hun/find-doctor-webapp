@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -9,8 +9,8 @@ import { apiClient } from "@/lib/api-client";
 import AppointmentDetailsForm from "@/components/AppointmentDetailsForm";
 import PaymentForm from "@/components/PaymentForm";
 import PatientInfoForm from "@/components/PatientInfoForm";
-import { DoctorOption } from "@/types/DoctorDto";
 import { AppointmentTypeOption } from "@/types/AppointmentType";
+import { DoctorOption } from "@/types/Doctor";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -139,7 +139,7 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded shadow p-6 mt-10">
-      <h1 className="text-2xl font-semibold mb-4">Quick Registration</h1>
+      <h1 className="text-2xl font-semibold mb-4">Quick Booking appointment</h1>
 
       <div className="flex border-b mb-4">
         {["Basic Information", "Appointment Details", "Payment"].map((label, idx) => (

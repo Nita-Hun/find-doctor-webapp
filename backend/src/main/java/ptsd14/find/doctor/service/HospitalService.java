@@ -43,29 +43,28 @@ public class HospitalService {
     public HospitalDto create(HospitalDto dto) {
         validateNameUniqueness(dto.getName(), null);
         Hospital hospital = hospitalMapper.toEntity(dto);
-        hospital.setId(null); // Ensure new entity
+        hospital.setId(null); 
         Hospital savedHospital = hospitalRepository.save(hospital);
         return hospitalMapper.toDto(savedHospital);
     }
 
     private void validateNameUniqueness(String name, Long excludeId) {
-        if(!isNameUnique(name, excludeId)) {  // Changed this condition
+        if(!isNameUnique(name, excludeId)) { 
             throw new DuplicateResourceException(String.format("Hospital with name %s already exists", name));
         }
     }
 
     public boolean isNameUnique(String name, Long excludeId) {
         if(excludeId == null) {
-            return !hospitalRepository.existsByName(name);  // Inverted logic
+            return !hospitalRepository.existsByName(name);  
         }
-        return !hospitalRepository.existsByNameAndIdNot(name, excludeId);  // Inverted logic
+        return !hospitalRepository.existsByNameAndIdNot(name, excludeId);  
     }
 
     public HospitalDto update(Long id, HospitalDto dto) {
         Hospital existingHospital = hospitalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hospital not found"));
 
-        // Only validate name uniqueness if the name is being changed
         if (dto.getName() != null && !dto.getName().equals(existingHospital.getName())) {
             validateNameUniqueness(dto.getName(), id);
             existingHospital.setName(dto.getName());

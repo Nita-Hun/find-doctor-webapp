@@ -1,6 +1,5 @@
-// frontend/src/components/UserThumbnail.tsx
+import { UserDto } from '@/dto/userDto';
 import Image from 'next/image';
-import { UserDto } from '@/types/UserDto';
 
 interface UserThumbnailProps {
   user: UserDto;
@@ -21,7 +20,6 @@ export default function UserThumbnail({ user }: UserThumbnailProps) {
         width={40}
         height={40}
         className="object-cover"
-        // Next.js Image requires domains config or unoptimized for external images
         unoptimized={true}
       />
     </div>

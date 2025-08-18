@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
 import { HospitalFormModalProps } from '@/types/Hospital';
+import { formatDate } from '@/utils/formatDate';
 
 export default function HospitalFormModal({ 
   hospital, 
@@ -118,19 +119,6 @@ export default function HospitalFormModal({
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   return (

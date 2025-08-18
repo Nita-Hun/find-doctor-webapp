@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
 import CommonFooter from "@/components/CommonFooter";
 
-// Load Material Icons CSS
 if (typeof window !== "undefined") {
   const link = document.createElement("link");
   link.href = "https://fonts.googleapis.com/icon?family=Material+Icons";
@@ -16,7 +15,7 @@ if (typeof window !== "undefined") {
 type SpecializationDto = {
   id: number;
   name: string;
-  iconUrl?: string; // will be icon name, e.g., "favorite"
+  iconUrl?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -97,7 +96,6 @@ export default function SpecializationsPage() {
               className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition cursor-pointer"
             >
               {spec.iconUrl ? (
-                  // If iconUrl starts with http or https, render img, else use <i> for Material Icons font
                   spec.iconUrl.startsWith("http") ? (
                     <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-blue-100 rounded-full">
                       <img

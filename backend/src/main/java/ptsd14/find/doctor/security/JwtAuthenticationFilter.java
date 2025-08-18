@@ -45,7 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-
             // Validate token structure (JWT must have exactly 2 '.' chars)
             long dotCount = token.chars().filter(ch -> ch == '.').count();
             if (dotCount != 2) {

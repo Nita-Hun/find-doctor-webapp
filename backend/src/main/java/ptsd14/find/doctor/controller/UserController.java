@@ -26,7 +26,7 @@ public class UserController {
         @RequestParam(required = false, defaultValue = "0") Integer page,
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String search,
-        @RequestParam(required = false) String role // 🔁 changed from Role enum to String
+        @RequestParam(required = false) String role
     ) {
         int pageNumber = (page != null && page >= 0) ? page : 0;
 

@@ -1,20 +1,12 @@
+import { SpecializationCardProps } from '@/types/Specialization';
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
 
-type Specialization = {
-  id: number;
-  name: string;
-};
-
-type SpecializationCardProps = {
-  specialization: Specialization;
-};
-
 export default function SpecializationCard({ specialization }: SpecializationCardProps) {
-  // Add validation
+
   if (!specialization || !specialization.id || !specialization.name) {
     console.error('Invalid specialization data:', specialization);
-    return null; // or return a fallback UI
+    return null; 
   }
 
   return (

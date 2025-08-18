@@ -1,19 +1,14 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import toast from "react-hot-toast";
-import { AppointmentDto, AppointmentStatus } from "@/types/Appointment";
 import { PagedResponse } from "@/types/PagedResponse";
 import { CalendarCheckIcon, CalendarDaysIcon, CalendarIcon, ClipboardListIcon } from "lucide-react";
 import HistoryAppointments from "./HistoryAppointmentTab";
-
-const statusColors: Record<AppointmentStatus, string> = {
-  PENDING: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  CONFIRMED: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-green-50 text-green-700 border-green-200",
-  CANCELED: "bg-red-50 text-red-700 border-red-200",
-};
+import { formatDate } from "@/utils/formatDate";
+import { AppointmentStatus, statusColors } from "@/types/Status";
+import { AppointmentDto } from "@/dto/appointmentDto";
 
 export default function UpcomingAppointmentTabs() {
   const [tab, setTab] = useState<"upcoming" | "history">("upcoming");
@@ -102,18 +97,6 @@ function UpcomingAppointments() {
     } catch {
       toast.error("Failed to cancel appointment");
     }
-  }
-
-  function formatDate(dateStr?: string | null) {
-    if (!dateStr) return "N/A";
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-US", {
-      weekday: 'short',
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   }
 
   if (isLoading) {

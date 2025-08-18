@@ -13,6 +13,6 @@ public class ApiError {
     private int status;
     private String error;
     private String message;
-    private Map<String, String> details; // Optional for field-level errors
+    private Map<String, String> details;
 }
 

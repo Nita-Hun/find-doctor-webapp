@@ -7,21 +7,12 @@ import DoctorFormModal from '@/components/DoctorFormModal';
 import ErrorState from '@/components/ErrorState';
 import { Pencil, Trash2 } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import { DoctorDto } from '@/types/DoctorDto';
 import { PagedResponse } from '@/types/PagedResponse';
 import { FiSearch } from 'react-icons/fi';
-
-interface UserSimple {
-  id: number;
-  email: string;
-}
-const statusOptions = [
-  { value: '', label: 'All' },
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'ON_LEAVE', label: 'On Leave' },
-  { value: 'SUSPENDED', label: 'Suspended' },
-];
+import { formatDate } from '@/utils/formatDate';
+import { UserSimple } from '@/types/User';
+import { doctorStatusColors, doctorStatusOptions } from '@/types/Status';
+import { DoctorDto } from '@/dto/doctorDto';
 
 
 export default function DoctorPage() {
@@ -39,25 +30,6 @@ export default function DoctorPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const statusColors: Record<string, string> = {
-    ACTIVE: 'bg-green-100 text-green-800',
-    INACTIVE: 'bg-gray-100 text-gray-800',
-    ON_LEAVE: 'bg-yellow-100 text-yellow-800',
-    SUSPENDED: 'bg-red-100 text-red-800'
-  };
-
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const fetchDoctors = async () => {
     setIsLoading(true);
@@ -177,7 +149,7 @@ export default function DoctorPage() {
                 onChange={handleStatusFilterChange}
                 className="p-2 border border-gray-300 rounded-md text-sm w-full md:w-auto"
               >
-                {statusOptions.map(option => (
+                {doctorStatusOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -327,7 +299,7 @@ export default function DoctorPage() {
 
                     <td className="flex justify-between md:table-cell px-4 py-2 md:px-6 md:py-4">
                       <span className="font-medium text-gray-500 md:hidden">Status</span>
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[doctor.status] || 'bg-gray-100 text-gray-800'}`}>
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${doctorStatusColors[doctor.status] || 'bg-gray-100 text-gray-800'}`}>
                         {doctor.status.replace('_', ' ')}
                       </span>
                     </td>

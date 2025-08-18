@@ -9,13 +9,14 @@ import { ChevronDownIcon, UserIcon, ArrowRightOnRectangleIcon } from '@heroicons
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Logo from './Logo';
-import { useUserProfile } from '@/hooks/userProfile'; // Your hook to fetch user profile
+import { useUserProfile } from '@/hooks/userProfile'; 
 
 export default function AuthNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading, refetch } = useUserProfile();
+  const pathname = usePathname(); 
 
   const inputFileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -34,42 +35,25 @@ export default function AuthNavbar() {
   };
 
   const handlePhotoClick = () => {
-    if (!uploading) {
-      inputFileRef.current?.click();
-    }
+    if (!uploading) inputFileRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('File too large (max 2MB).');
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Invalid file type. Please select an image.');
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) return toast.error('File too large (max 2MB).');
+    if (!file.type.startsWith('image/')) return toast.error('Invalid file type.');
 
     const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('You must be logged in.');
-      return;
-    }
+    if (!token) return toast.error('You must be logged in.');
 
     setUploading(true);
-
     const formData = new FormData();
     formData.append('file', file);
 
     try {
       await apiClient.post('/api/auth/upload-profile-photo', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
       });
       toast.success('Profile photo updated');
       await refetch();
@@ -88,6 +72,14 @@ export default function AuthNavbar() {
       ? `${BACKEND_URL}${user.profilePhotoUrl}${cacheBuster}`
       : '/assets/images/avatar-placeholder.png';
 
+  const navItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Specializations', href: '/public/specializations' },
+    { name: 'About', href: '/public/about' },
+    { name: 'Contact', href: '/public/contact' },
+    { name: 'My Appointments', href: '/public/myAppointment' },
+  ];
+
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
@@ -100,29 +92,29 @@ export default function AuthNavbar() {
             <div className="flex items-center gap-6">
               {/* Desktop Nav */}
               <div className="hidden md:flex gap-6">
-                {[
-                  { name: 'Home', href: '/' },
-                  { name: 'Specializations', href: '/public/specializations' },
-                  { name: 'About', href: '/public/about' },
-                  { name: 'Contact', href: '/public/contact' },
-                  { name: 'My Appointments', href: '/public/myAppointment' },
-                ].map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="relative text-gray-600 hover:text-gray-900 transition-colors font-medium text-md"
-                  >
-                    {item.name}
-                    <motion.span
-                      initial={{ width: 0 }}
-                      whileHover={{ width: '100%' }}
-                      className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500"
-                    />
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`relative font-medium text-md transition-colors ${
+                        isActive ? 'text-blue-700' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {item.name}
+                      <motion.span
+                        layout
+                        initial={false}
+                        animate={{ width: isActive ? '100%' : 0 }}
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-700"
+                      />
+                    </Link>
+                  );
+                })}
               </div>
 
-              {/* Hidden file input for avatar upload */}
+              {/* Hidden file input */}
               <input
                 ref={inputFileRef}
                 type="file"
@@ -175,7 +167,7 @@ export default function AuthNavbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={() => router.push('/profile')}
+                              onClick={() => router.push('/admin/profiles')}
                               className={`${
                                 active ? 'bg-gray-50 text-blue-600' : 'text-gray-700'
                               } group flex w-full items-center px-4 py-2 text-sm`}
@@ -227,22 +219,21 @@ export default function AuthNavbar() {
             className="md:hidden bg-white border-t border-gray-100"
           >
             <div className="px-6 py-4 flex flex-col gap-4">
-              {[
-                { name: 'Home', href: '/' },
-                { name: 'Specializations', href: '/specializations' },
-                { name: 'About', href: '/about' },
-                { name: 'Contact', href: '/contact' },
-                { name: 'My Appointments', href: '/appointments' },
-              ].map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-gray-700 hover:text-pink-600 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`py-2 px-4 rounded-lg transition-colors ${
+                      isActive ? 'text-blue-700 font-medium' : 'text-gray-700 hover:text-pink-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
 
               {user && (
                 <div className="mt-4 flex items-center justify-between border-t pt-4">

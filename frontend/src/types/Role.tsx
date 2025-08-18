@@ -3,16 +3,16 @@ export type PermissionSet = {
   create: boolean;
   edit: boolean;
   delete: boolean;
-  confrim: boolean;
+  confirm: boolean;
   completed: boolean;
-  cancel: boolean;
+  canceled: boolean;
 };
 
 export interface RoleFormData {
   name: string;
   description: string;
   status: string;
-  permissions: Record<string, PermissionSet>;  // <-- This must be this shape
+  permissions: Record<string, PermissionSet>;
 }
 export interface Role {
   id: number;
@@ -23,8 +23,17 @@ export interface Role {
   updatedAt: string
 }
 
-export interface RoleDto {
-  id: number;
-  name: string;
+export const ENTITIES = ["DOCTOR", "PATIENT", "APPOINTMENT", "ROLE", "USER", "SPECIALIZATION", "DASHBOARD", "PAYMENT" ];
+export const ACTIONS = ["view", "create", "edit", "delete", "confirm", "completed", "canceled"] as const;
+
+
+export interface RoleFormModalProps {
+  initialData?: Partial<Role> & RoleFormData;
+  onClose: () => void;
+  onSuccess: () => void;
 }
+
+
+
+
 

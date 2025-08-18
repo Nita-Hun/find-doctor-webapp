@@ -38,25 +38,25 @@ public class AppointmentRepositoryTest {
 
     @BeforeEach
     void setup() {
-        // Prepare and save entities for testing
+        
         doctor = new Doctor();
         doctor.setFirstname("nita");
         doctor.setLastname("hun");
-        // ... set other required fields
+       
         doctorRepository.save(doctor);
 
         patient = new Patient();
         patient.setFirstname("sok");
         patient.setLastname("leng");
         patient.setGender("female");
-        // ... set other required fields
+        
         patientRepository.save(patient);
 
         appointmentType = new AppointmentType();
         appointmentType.setName("Consultation");
         appointmentTypeRepository.save(appointmentType);
 
-        // Save an appointment for testing
+        
         Appointment appointment = new Appointment();
         appointment.setDoctor(doctor);
         appointment.setPatient(patient);

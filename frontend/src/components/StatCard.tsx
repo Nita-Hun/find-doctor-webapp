@@ -1,4 +1,3 @@
-// components/StatCard.tsx
 export default function StatCard({ title, value }: { title: string; value: number }) {
   return (
     <div className="bg-white rounded shadow p-4 flex flex-col items-center justify-center">

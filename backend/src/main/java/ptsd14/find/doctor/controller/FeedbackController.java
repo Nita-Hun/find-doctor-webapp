@@ -54,7 +54,6 @@ public class FeedbackController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FeedbackDto> update(@PathVariable Long id, @RequestBody FeedbackDto dto) {
         return ResponseEntity.ok(feedbackService.update(id, dto));
     }
