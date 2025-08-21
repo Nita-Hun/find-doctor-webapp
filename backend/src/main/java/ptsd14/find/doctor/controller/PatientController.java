@@ -39,8 +39,9 @@ public class PatientController {
         return ResponseEntity.ok(patientsPage);
     }
     @GetMapping("/my")
+    @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<PatientDto> getMyPatientInfo(Authentication authentication) {
-    String email = authentication.getName(); // or use another identifier based on your auth
+    String email = authentication.getName(); 
     PatientDto patient = patientService.getPatientByUserEmail(email);
     return ResponseEntity.ok(patient);
     }
@@ -62,11 +63,12 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
     public ResponseEntity<PatientDto> update(@PathVariable Long id, @RequestBody PatientDto dto) {
         PatientDto updatedPatient = patientService.update(id, dto);
         return ResponseEntity.ok(updatedPatient);
     }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

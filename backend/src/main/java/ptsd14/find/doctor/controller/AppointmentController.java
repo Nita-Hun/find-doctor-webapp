@@ -58,7 +58,7 @@ public class AppointmentController {
     }
 
     /**
-     * ADMIN: Get a single appointment by ID.
+     * PATIENT: Get a single appointment by ID.
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('PATIENT')")

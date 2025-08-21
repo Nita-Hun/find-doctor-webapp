@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -94,21 +95,23 @@ public class PatientService {
 
     @Transactional
     public PatientDto update(Long id, PatientDto dto) {
-    Patient existing = patientRepository.findWithUserById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
+        Patient existing = patientRepository.findWithUserById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
-    if (dto.getUserId() != null && dto.getUserId() > 0) {
-        User user = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        existing.setUser(user);
-    } else {
-        existing.setUser(null);
+        // Ownership check
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !existing.getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException("You cannot update another patient's profile");
+        }
+
+        patientMapper.updateFromDto(dto, existing);
+        return patientMapper.toDto(patientRepository.save(existing));
     }
 
-    patientMapper.updateFromDto(dto, existing);
-
-    return patientMapper.toDto(patientRepository.save(existing));
-    }
 
     public void delete(Long id) {
         if (!patientRepository.existsById(id)) {

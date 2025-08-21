@@ -112,13 +112,13 @@ public class AppointmentService {
         return appointments.map(appointmentMapper::toDto);
 
     }
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<AppointmentDto> getAppointmentsForPatient(Long userId, Pageable pageable) {
     return appointmentRepository.findByPatientUserId(userId, pageable)
             .map(appointmentMapper::toDto);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<AppointmentDto> getCompletedAppointmentsForPatient(Long userId, Pageable pageable) {
     return appointmentRepository.findByPatientIdAndStatus(userId, AppointmentStatus.COMPLETED, pageable)
         .map(appointmentMapper::toDto);

@@ -47,7 +47,7 @@ public class User implements UserDetails {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
-    private UserRole role; // entity
+    private UserRole role; 
 
 
     @Column(name = "created_at")

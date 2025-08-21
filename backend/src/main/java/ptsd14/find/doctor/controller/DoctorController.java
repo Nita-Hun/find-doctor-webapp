@@ -53,9 +53,10 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    // @PreAuthorize("hasRole('ADMIN')")
-    @PreAuthorize("hasAuthority('DOCTOR:edit')")
+    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasAuthority('DOCTOR:edit')")
     public ResponseEntity<DoctorDto> update(@PathVariable Long id, @RequestBody DoctorDto dto) {
+        
         return ResponseEntity.ok(doctorService.update(id, dto));
     }
 

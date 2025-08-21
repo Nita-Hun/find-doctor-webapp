@@ -2,6 +2,7 @@ package ptsd14.find.doctor.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import ptsd14.find.doctor.model.User;
@@ -17,6 +18,7 @@ public class AdminService {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public User createUser(String email, String rawPassword, String roleName) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already exists");
@@ -31,7 +33,7 @@ public class AdminService {
         user.setRole(role);
         return userRepository.save(user);
     }
-
+    @Transactional
     public User updateProfilePhoto(Long userId, String photoUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

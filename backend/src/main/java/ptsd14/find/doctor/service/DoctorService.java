@@ -3,6 +3,9 @@ package ptsd14.find.doctor.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,6 +119,14 @@ public class DoctorService {
         Doctor existing = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !existing.getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException("You cannot update another doctor's profile");
+        }
         existing.setFirstname(dto.getFirstname());
         existing.setLastname(dto.getLastname());
         existing.setStatus(dto.getStatus());
@@ -141,6 +152,17 @@ public class DoctorService {
     }
 
     public void delete(Long id) {
+        Doctor existing = doctorRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        boolean isAdmin = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !existing.getUser().getEmail().equals(email)) {
+            throw new AccessDeniedException("You cannot delete another doctor's profile");
+        }
         doctorRepository.deleteById(id);
     }
 
@@ -242,13 +264,26 @@ public class DoctorService {
 
     @Transactional(readOnly = true)
     public FeedbackSummaryDto getFeedbackSummary() {
-    Double avgRating = feedbackRepository.findAverageRatingAllDoctors();
-    if (avgRating == null) avgRating = 0.0;
+        Double avgRating = feedbackRepository.findAverageRatingAllDoctors();
+        if (avgRating == null) avgRating = 0.0;
 
-    Integer ratingCount = feedbackRepository.countAllRatings();
-    if (ratingCount == null) ratingCount = 0;
+        Integer ratingCount = feedbackRepository.countAllRatings();
+        if (ratingCount == null) ratingCount = 0;
 
-    return new FeedbackSummaryDto(avgRating, ratingCount);
+        return new FeedbackSummaryDto(avgRating, ratingCount);
+    }
+
+    @Transactional(readOnly = true)
+    public Doctor getDoctorForCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return doctorRepository.findByUser(user)
+            .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 }
+
 
 }

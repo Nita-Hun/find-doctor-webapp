@@ -3,9 +3,6 @@
 *.iml
 .idea/
 *.class
-/target/
-/uploads/
-/.DS_Store
 
 application.properties
 
