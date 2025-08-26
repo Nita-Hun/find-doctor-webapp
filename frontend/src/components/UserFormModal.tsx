@@ -5,11 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 import { User, UserFormModalProps } from '@/types/User';
 import { FiX } from 'react-icons/fi';
-
-interface RoleDto {
-  id: number;
-  name: string;
-}
+import { RoleDto } from '@/dto/roleDto';
 
 // Base backend URL from env or fallback
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
@@ -151,8 +147,7 @@ export default function UserFormModal({ user, onClose, onSuccess }: UserFormModa
       } else if (formData.password) {
         data.password = formData.password;
       }
-
-      // Normalize photo URLs for comparison
+      
       const normalizedFormPhotoUrl = normalizeUrl(formData.profilePhotoUrl);
       const normalizedUserPhotoUrl = normalizeUrl(user?.profilePhotoUrl);
 

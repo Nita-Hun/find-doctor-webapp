@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useUserProfile } from "@/hooks/userProfile";
 import { useRef, useState, useEffect } from "react";
-import { Menu, Transition } from "@headlessui/react";
-import { ChevronDownIcon, ArrowRightOnRectangleIcon, UserIcon } from "@heroicons/react/24/outline";
+import { ChevronDownIcon, UserIcon } from "@heroicons/react/24/outline";
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/solid';
 import toast from "react-hot-toast";
 import { apiClient } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
+import { MenuButton, MenuItems, MenuItem, Menu, Transition } from "@headlessui/react";
+
 
 export default function Topbar() {
   const { user, loading, refetch } = useUserProfile();
@@ -107,7 +109,7 @@ export default function Topbar() {
         </div>
       ) : (
         <Menu as="div" className="relative">
-          <Menu.Button className="flex items-center space-x-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 rounded-full">
+          <MenuButton as="button" className="flex items-center space-x-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-opacity-50 rounded-full">
             <div className="relative">
               <div className={`w-9 h-9 rounded-full overflow-hidden border-2 border-transparent group-hover:border-blue-200 transition-all ${uploading ? "cursor-wait" : "cursor-pointer"}`} onClick={handlePhotoClick}>
                 <Image
@@ -130,7 +132,7 @@ export default function Topbar() {
               <p className="text-xs text-gray-500 capitalize">{user?.role || "Role"}</p>
             </div>
             <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
-          </Menu.Button>
+          </MenuButton>
 
           <Transition
             enter="transition ease-out duration-100"
@@ -140,43 +142,33 @@ export default function Topbar() {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+            <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
               <div className="px-4 py-3">
                 <p className="text-sm font-medium text-gray-900 truncate">{user?.role || "User"}</p>
                 <p className="text-xs text-gray-500 truncate capitalize">{user?.email || user?.role || "Role"}</p>
               </div>
               <div className="py-1">
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={() => router.push("/admin/profiles")}
-                      className={`${
-                        active ? 'bg-gray-50 text-blue-600' : 'text-gray-700'
-                      } group flex w-full items-center px-4 py-2 text-sm transition-colors`}
-                    >
-                      <UserIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-blue-500" />
-                      My Profile
-                    </button>
-                  )}
-                </Menu.Item>
-                
+                <MenuItem
+                  as="button"
+                  className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                  onClick={() => router.push("/admin/profiles")}
+                >
+                  <UserIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-blue-500" />
+                  My Profile
+                </MenuItem>
               </div>
               <div className="py-1">
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={handleLogout}
-                      className={`${
-                        active ? 'bg-gray-50 text-red-600' : 'text-gray-700'
-                      } group flex w-full items-center px-4 py-2 text-sm transition-colors`}
-                    >
-                      <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-red-500" />
-                      Sign out
-                    </button>
-                  )}
-                </Menu.Item>
+                <MenuItem
+                  as="button"
+                  onClick={handleLogout}
+                  className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors"
+                >
+                  <ArrowRightStartOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-red-500" />
+                  Sign out
+                </MenuItem>
+
               </div>
-            </Menu.Items>
+            </MenuItems>
           </Transition>
         </Menu>
       )}

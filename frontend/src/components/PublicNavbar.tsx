@@ -10,7 +10,7 @@ import Logo from './Logo';
 export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const pathname = usePathname(); // Get current path
+  const pathname = usePathname(); 
 
   useEffect(() => {
     const token = localStorage.getItem('token');
