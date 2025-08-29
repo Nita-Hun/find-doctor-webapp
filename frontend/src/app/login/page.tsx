@@ -108,7 +108,7 @@ export default function LoginPage() {
             </div>
           </div>
           
-          <h1 className="text-3xl font-bold mb-2 text-center text-gray-800">Welcome Back</h1>
+          <h1 className="text-3xl font-bold mb-2 text-center text-gray-800">Login</h1>
           <p className="text-gray-500 text-center mb-8">Sign in to continue to your account</p>
           
           <form onSubmit={handleLogin} noValidate>

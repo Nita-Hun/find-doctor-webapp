@@ -83,7 +83,7 @@ export default function RegisterPage() {
             </div>
           </div>
           
-          <h1 className="text-3xl font-bold mb-2 text-center text-gray-800">Join Us Today</h1>
+          <h1 className="text-3xl font-bold mb-2 text-center text-gray-800">Register</h1>
           <p className="text-gray-500 text-center mb-8">Create your account in just a few steps</p>
           
           <form onSubmit={handleRegister} noValidate>
